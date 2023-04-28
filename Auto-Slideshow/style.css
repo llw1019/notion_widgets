@@ -36,16 +36,16 @@ body{
         transform: translateX(-100%);
     }
     55%{
-        transform: translateX(-200%);
+        transform: translateX(-100%);
     }
     75%{
         transform: translateX(-200%);
     }
     80%{
-        transform: translateX(-300%);
+        transform: translateX(-200%);
     }
     100%{
-        transform: translateX(-300%);
+        transform: translateX(-200%);
     }
 }
 img{
