@@ -26,26 +26,20 @@ body{
     0%{
         transform: translateX(0);
     }
-    25%{
+    33%{
         transform: translateX(0);
-    }
-    30%{
-        transform: translateX(-100%);
     }
     50%{
         transform: translateX(-100%);
     }
-    55%{
-        transform: translateX(-200%);
-    }
-    75%{
-        transform: translateX(-200%);
+    66%{
+        transform: translateX(-100%);
     }
     80%{
-        transform: translateX(0);
+        transform: translateX(-200%);
     }
     100%{
-        transform: translateX(0);
+        transform: translateX(-200%);
     }
 }
 img{
