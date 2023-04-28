@@ -17,40 +17,43 @@ body{
     border-radius: 8px;
     box-shadow: 10px 25px 30px rgba(220,220,220,0.3);
 }
-.wrapper {
-    width: 100%;
+.wrapper{
+    width: 400%;
     display: flex;
     animation: slide 15s linear infinite;
 }
 @keyframes slide {
-    0% {
-        transform: translateX(0);
-    }
-    20% {
-        transform: translateX(0);
-    }
-    25% {
-        transform: translateX(-100%);
-    }
-    45% {
-        transform: translateX(-100%);
-    }
-    50% {
-        transform: translateX(-200%);
-    }
-    70% {
-        transform: translateX(-200%);
-    }
-    75% {
-        transform: translateX(-300%);
-    }
-    95% {
-        transform: translateX(-300%);
-    }
-    100% {
-        transform: translateX(0%);
-    }
+  0% {
+    transform: translateX(0);
+  }
+  16.666% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-100%);
+  }
+  36.666% {
+    transform: translateX(-100%);
+  }
+   40% {
+    transform: translateX(-200%);
+  }
+  56.666% {
+    transform: translateX(-200%);
+  }
+   60% {
+    transform: translateX(-300%);
+  }
+  76.666% {
+    transform: translateX(-300%);
+  }
+  80% {
+    transform: translateX(-400%);
+  }
+  100% {
+    transform: translateX(-400%);
+  }
 }
 img{
-    width: 100%;
+    width: 25%;
 }
