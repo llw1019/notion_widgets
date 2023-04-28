@@ -48,14 +48,7 @@ body{
         transform: translateX(-300%);
     }
     100% {
-        transform: translateX(-400%);
-    }
-    /* 新增的動畫段落 */
-    101% {
-        transform: translateX(-400%);
-    }
-    105% {
-        transform: translateX(0);
+        transform: translateX(0%);
     }
 }
 img{
