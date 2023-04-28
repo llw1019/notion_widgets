@@ -112,6 +112,23 @@
             background-color: rgb(25, 25, 25) !important;
         }
         
+        @media (prefers-color-scheme: dark) {
+            body {
+                background-color: #000;
+                color: #fff;
+            }
+
+            .light {
+                color: rgba(255, 255, 255, 0.9) !important;
+                background-color: #000 !important;
+            }
+
+            .dark {
+                color: rgba(0, 0, 0, 0.9) !important;
+                background-color: #fff !important;
+            }
+        }
+        
         .dash {
             opacity: 0.2;
         }
