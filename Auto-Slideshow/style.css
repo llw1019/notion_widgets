@@ -26,22 +26,22 @@ body{
     0%{
         transform: translateX(0);
     }
-    25%{
+    15%{
         transform: translateX(0);
     }
-    30%{
+    18%{
         transform: translateX(-100%);
     }
-    50%{
+    48%{
         transform: translateX(-100%);
     }
-    55%{
+    51%{
         transform: translateX(-200%);
     }
-    75%{
+    81%{
         transform: translateX(-200%);
     }
-    80%{
+    84%{
         transform: translateX(-300%);
     }
     100%{
