@@ -7,6 +7,39 @@
     <title>Notion Random Quote</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400&family=Roboto+Mono:wght@300;400&family=Roboto:wght@300;400&display=swap" rel="stylesheet">
     <style>
+    :root {
+        --background-light: #ffffff;
+        --background-dark: #000000;
+     }
+
+    @media (prefers-color-scheme: light) {
+    /* 在light mode下設定背景為白色 */
+    body {
+        background-color: white;
+        }
+    }
+
+    @media (prefers-color-scheme: dark) {
+    /* 在dark mode下設定背景為黑色 */
+     body {
+        background-color: black;
+        }
+    }
+
+    @media (prefers-color-scheme: light) {
+    /* 在light mode下使用--background-light變數設定背景 */
+    body {
+        background-color: var(--background-light);
+        }
+    }
+
+    @media (prefers-color-scheme: dark) {
+    /* 在dark mode下使用--background-dark變數設定背景 */
+     body {
+         background-color: var(--background-dark);
+         }
+    }
+        
         body {
             min-height: 50vh;
             display: flex;
