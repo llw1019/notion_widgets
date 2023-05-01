@@ -15,7 +15,10 @@ body{
     overflow: hidden;
     border: 20px solid #ffffff;
     border-radius: 8px;
-    box-shadow: 10px 25px 30px rgba(220,220,220,0.3);
+    box-shadow: 
+    10px 25px 30px rgba(220,220,220,0.3), /* 陰影1：下方和右方 */
+    -2px -2px 30px rgba(220,220,220,0.3));     /* 陰影2：上方和左方 */
+    
 }
 .wrapper{
     width: 100%;
