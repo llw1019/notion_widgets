@@ -1,57 +1,57 @@
-*{
-    padding: 0;
-    margin: 0;
-    box-sizing: border-box;
+* {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
 }
-body{
-    background-color: transparent;
+body {
+  background-color: transparent;
 }
-.container{
-    width: 85vmin;
-    position: absolute;
-    transform: translate(-50%,-50%);
-    top: 50%;
-    left: 50%;
-    overflow: hidden;
-    border: 20px solid #ffffff;
-    border-radius: 8px;
-    box-shadow: 
-    10px 25px 30px rgba(220,220,220,0.3), /* 陰影1：下方和右方 */
-    -5px -5px 30px rgba(220,220,220,0.3);  /* 陰影2：上方和左方 */
-
-    
+.container {
+  width: 100vw;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  overflow: hidden;
+  border: 20px solid #ffffff;
+  border-radius: 8px;
+  box-shadow: 10px 25px 30px rgba(220, 220, 220, 0.3);
 }
-.wrapper{
-    width: 100%;
-    display: flex;
-    animation: slide 15s linear infinite;
+.wrapper {
+  width: 400%; /* 圖片數量乘以100% */
+  display: flex;
+  animation: slide 15s linear infinite;
 }
 @keyframes slide {
   0% {
     transform: translateX(0);
   }
-  15% {
-    transform: translateX(0);
+  /* 每張圖片佔25% */
+  20% {
+    transform: translateX(0%);
   }
-  18.333% {
-    transform: translateX(-100%);
+  25% {
+    transform: translateX(-25%);
   }
-  48.333% {
-    transform: translateX(-100%);
+  45% {
+    transform: translateX(-25%);
   }
-   51.666% {
-    transform: translateX(-200%);
+  50% {
+    transform: translateX(-50%);
   }
-  81.666% {
-    transform: translateX(-200%);
+  70% {
+    transform: translateX(-50%);
   }
-   84.999% {
-    transform: translateX(-300%);
+  75% {
+    transform: translateX(-75%);
+  }
+  95% {
+    transform: translateX(-75%);
   }
   100% {
-    transform: translateX(-300%);
+    transform: translateX(-100%);
   }
 }
-img{
-    width: 100%;
+img {
+  width: 100%;
 }
