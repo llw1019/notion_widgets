@@ -8,9 +8,6 @@ body{
 }
 .container{
     width: 85vmin;
-    height: 85vmin;
-    max-width: 100%;
-    max-height: 100%;
     position: absolute;
     transform: translate(-50%,-50%);
     top: 50%;
@@ -20,41 +17,41 @@ body{
     border-radius: 8px;
     box-shadow: 
     10px 25px 30px rgba(220,220,220,0.3), /* 陰影1：下方和右方 */
-    5px 5px 30px rgba(220,220,220,0.3));     /* 陰影2：上方和左方 */
+    -5px -5px 30px rgba(220,220,220,0.3);  /* 陰影2：上方和左方 */
 
+    
 }
 .wrapper{
-    width: 400%;
+    width: 100%;
     display: flex;
     animation: slide 15s linear infinite;
-}
-.wrapper img {
-    width: 25%;
-    height: auto;
 }
 @keyframes slide {
   0% {
     transform: translateX(0);
   }
-  25% {
+  15% {
     transform: translateX(0);
   }
-  30% {
+  18.333% {
     transform: translateX(-100%);
   }
-  55% {
+  48.333% {
     transform: translateX(-100%);
   }
-  60% {
+   51.666% {
     transform: translateX(-200%);
   }
-  85% {
+  81.666% {
     transform: translateX(-200%);
   }
-  90% {
+   84.999% {
     transform: translateX(-300%);
   }
   100% {
     transform: translateX(-300%);
   }
+}
+img{
+    width: 100%;
 }
