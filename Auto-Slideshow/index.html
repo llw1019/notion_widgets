@@ -1,19 +1,66 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Auto-slideshow</title>
-    <!--Stylesheet-->
-    <link rel="stylesheet" href="style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Auto-slideshow</title>
+  <!--Stylesheet-->
+  <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
-    <div class="container">
-        <div class="wrapper">
-            <img src="image-1.jpg">
-            <img src="image-2.jpg">
-            <img src="image-3.jpg">
-            <img src="image-1.jpg">
-        </div>
+  <div class="container">
+    <div class="wrapper">
+      <img src="image-1.jpg">
+      <img src="image-2.jpg">
+      <img src="image-3.jpg">
+      <img src="image-1.jpg">
     </div>
+  </div>
+
+  <script>
+    let photos = 3; // 设置乘法因子
+    let animationDuration = `${photos * 5}s`; // 计算持续时间
+    let animationPercent = 100 / photos; // 计算持续时间
+
+    let styles = '@keyframes slide {';
+    styles += `
+                ${0}% {
+                    transform: translateX(0);
+                }
+            `;
+    for (let i = 0; i < photos; i++) {
+      styles += `
+                ${animationPercent * i + animationPercent * (4 / 5)}% {
+                    transform: translateX(-${i * 100}%);
+                }
+            `;
+      styles += `
+                ${animationPercent * i + animationPercent}% {
+                    transform: translateX(-${(i + 1) * 100}%);
+                }
+            `;
+    }
+    styles += `
+                ${100}% {
+                    transform: translateX(-${photos * 100}%);
+                }
+            `;
+    styles += '}';
+
+    styles += `
+        .wrapper {
+            width: 100%;
+            display: flex;
+            animation: slide ${animationDuration} linear infinite; /* 修改动画持续时间 */
+        }
+    `;
+
+    const styleSheet = document.createElement('style');
+    styleSheet.type = 'text/css';
+    styleSheet.innerText = styles;
+    document.head.appendChild(styleSheet);
+  </script>
 </body>
+
 </html>
