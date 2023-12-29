@@ -22,7 +22,7 @@
   <script>
     let photos = 4; // How many photos?
     let animationDuration = `${photos * 5}s`; // Calculate animation duration.
-    let animationPercent = 100 / photos; // Calculate percentage of a second.
+    let animationPercent = (100 / photos).toFixed(2); // Calculate percentage of a second.
 
     let styles = '@keyframes slide {';
     styles += `
@@ -32,12 +32,12 @@
             `;
     for (let i = 0; i < photos; i++) {
       styles += `
-                ${animationPercent * i + animationPercent * (4 / 5)}% {
+                ${(animationPercent * i + animationPercent * (4 / 5)).toFixed(2)}% {
                     transform: translateX(-${i * 100}%);
                 }
             `;
       styles += `
-                ${animationPercent * i + animationPercent}% {
+                ${(animationPercent * i + animationPercent).toFixed(2)}% {
                     transform: translateX(-${(i + 1) * 100}%);
                 }
             `;
