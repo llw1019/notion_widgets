@@ -31,6 +31,9 @@
       img.src = `image-${i}.jpg`;
       container.appendChild(img);
     }
+    const img = document.createElement('img');
+    img.src = `image-1.jpg`;
+    container.appendChild(img);
     
     let photos = numberOfImages; // How many photos?
     let animationDuration = `${photos * 5}s`; // Calculate animation duration.
