@@ -34,10 +34,9 @@
     const img = document.createElement('img');
     img.src = `image-1.jpg`;
     container.appendChild(img);
-    
-    let photos = numberOfImages; // How many photos?
-    let animationDuration = `${photos * 5}s`; // Calculate animation duration.
-    let animationPercent = (100 / photos); // Calculate percentage of a second.
+
+    let animationDuration = `${numberOfImages * 5}s`; // Calculate animation duration.
+    let animationPercent = (100 / numberOfImages); // Calculate percentage of a second.
 
     let styles = '@keyframes slide {';
     styles += `
@@ -45,7 +44,7 @@
                     transform: translateX(0);
                 }
             `;
-    for (let i = 0; i < photos; i++) {
+    for (let i = 0; i < numberOfImages; i++) {
       styles += `
                 ${(animationPercent * i + animationPercent * (4 / 5)).toFixed(2)}% {
                     transform: translateX(-${i * 100}%);
@@ -59,7 +58,7 @@
     }
     styles += `
                 ${100}% {
-                    transform: translateX(-${photos * 100}%);
+                    transform: translateX(-${numberOfImages * 100}%);
                 }
             `;
     styles += '}';
