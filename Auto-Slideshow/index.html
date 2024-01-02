@@ -11,16 +11,28 @@
 <body>
   <div class="container">
     <div class="wrapper">
+      <!--
       <img src="image-1.jpg">
       <img src="image-2.jpg">
       <img src="image-3.jpg">
-      <img src="image-5.jpg">
+      <img src="image-4.jpg">
       <img src="image-1.jpg">
+      -->
     </div>
   </div>
 
   <script>
-    let photos = 4; // How many photos?
+    const numberOfImages = 4;
+    const container = document.querySelector('.wrapper');
+
+    // Dynamically generate img elements
+    for (let i = 1; i <= numberOfImages; i++) {
+      const img = document.createElement('img');
+      img.src = `image-${i}.jpg`;
+      container.appendChild(img);
+    }
+    
+    let photos = numberOfImages; // How many photos?
     let animationDuration = `${photos * 5}s`; // Calculate animation duration.
     let animationPercent = (100 / photos); // Calculate percentage of a second.
 
