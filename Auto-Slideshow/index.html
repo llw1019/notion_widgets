@@ -22,59 +22,87 @@
   </div>
 
   <script>
-    const numberOfImages = 4;
     const container = document.querySelector('.wrapper');
+    let numberOfImages = 0;
 
-    // Dynamically generate img elements
-    for (let i = 1; i <= numberOfImages; i++) {
-      const img = document.createElement('img');
-      img.src = `Pic/image_${i}.jpg`;
-      container.appendChild(img);
+    // Function to get number of images dynamically
+    function getImageCount() {
+      let i = 1;
+
+      // Check for existence of images until one is not found
+      function checkImageExists() {
+        const img = new Image();
+        img.onload = function () {
+          numberOfImages++;
+          checkImageExists();
+        };
+        img.onerror = function () {
+          generateImages();
+        };
+        img.src = `Pic/image_${i}.jpg`;
+        i++;
+      }
+
+      // Start checking for image existence
+      checkImageExists();
     }
-    const img = document.createElement('img');
-    img.src = `Pic/image_1.jpg`;
-    container.appendChild(img);
 
-    let animationDuration = `${numberOfImages * 5}s`; // Calculate animation duration.
-    let animationPercent = (100 / numberOfImages); // Calculate percentage of a second.
+    // Function to generate img elements dynamically
+    function generateImages() {
+      for (let i = 1; i <= numberOfImages; i++) {
+        const img = document.createElement('img');
+        img.src = `Pic/image_${i}.jpg`;
+        container.appendChild(img);
+      }
+      const img = document.createElement('img');
+      img.src = `Pic/image_1.jpg`;
+      container.appendChild(img);
 
-    let styles = '@keyframes slide {';
-    styles += `
+      // Update animation styles
+      updateAnimationStyles();
+    }
+
+    // Function to update animation styles
+    function updateAnimationStyles() {
+      let animationDuration = `${numberOfImages * 5}s`; // Calculate animation duration.
+      let animationPercent = 100 / numberOfImages; // Calculate percentage of a second.
+
+      let styles = '@keyframes slide {';
+      styles += `
                 ${0}% {
                     transform: translateX(0);
-                }
-            `;
-    for (let i = 0; i < numberOfImages; i++) {
-      styles += `
+                }`;
+      for (let i = 0; i < numberOfImages; i++) {
+        styles += `
                 ${(animationPercent * i + animationPercent * (4 / 5)).toFixed(2)}% {
                     transform: translateX(-${i * 100}%);
-                }
-            `;
-      styles += `
+                }`;
+        styles += `
                 ${(animationPercent * i + animationPercent).toFixed(2)}% {
                     transform: translateX(-${(i + 1) * 100}%);
-                }
-            `;
-    }
-    styles += `
+                }`;
+      }
+      styles += `
                 ${100}% {
                     transform: translateX(-${numberOfImages * 100}%);
-                }
-            `;
-    styles += '}';
+                }`;
+      styles += '}';
 
-    styles += `
+      styles += `
         .wrapper {
             width: 100%;
             display: flex;
             animation: slide ${animationDuration} linear infinite; /* Modify animation duration */
-        }
-    `;
+        }`;
 
-    const styleSheet = document.createElement('style');
-    styleSheet.type = 'text/css';
-    styleSheet.innerText = styles;
-    document.head.appendChild(styleSheet);
+      const styleSheet = document.createElement('style');
+      styleSheet.type = 'text/css';
+      styleSheet.innerText = styles;
+      document.head.appendChild(styleSheet);
+    }
+
+    // Call the function to get the image count and start generating images
+    getImageCount();
   </script>
 </body>
 
