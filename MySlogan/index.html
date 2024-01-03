@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>垂直置中文本</title>
+  <style>
+    body {
+      display: flex;
+      height: 100vh;
+      justify-content: space-between;
+      align-items: center;
+      margin: 0;
+      padding: 0 20px; /* 适当的页面内边距 */
+    }
+    .center {
+      text-align: center;
+      flex-grow: 1; /* 让文本部分占据剩余空间 */
+    }
+  </style>
+</head>
+<body>
+  <div>"</div>
+  <div class="center">I can do all things…</div>
+  <div>"</div>
+</body>
+</html>
