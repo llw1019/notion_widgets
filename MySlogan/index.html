@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
-  <title>可编辑的文本</title>
+  <title>可編輯的文本</title>
   <style>
     body {
       display: flex;
@@ -10,36 +11,48 @@
       justify-content: space-between;
       align-items: center;
       margin: 0;
-      padding: 0 20px; /* 适当的页面内边距 */
+      padding: 0 20px;         /* 適當的頁面內邊距 */
+      background-color: white; /* 默認為白色背景 */
+      color: black;            /* 默認為黑色文字 */
     }
+
+    @media (prefers-color-scheme: dark) {
+      body {
+        background-color: black; /* 暗黑模式下背景為黑色 */
+        color: white;            /* 暗黑模式下文字為白色 */
+      }
+    }
+
     .center {
       text-align: center;
-      flex-grow: 1; /* 让文本部分占据剩余空间 */
+      flex-grow: 1; /* 讓文本部分佔據剩餘空間 */
     }
   </style>
 </head>
+
 <body>
   <div>"</div>
   <div class="center" contenteditable="true" id="editableText">I can do all things…</div>
   <div>"</div>
 
   <script>
-    // 获取可编辑文本元素
+    /* 獲取可編輯文本元素 */
     const editableText = document.getElementById('editableText');
 
-    // 尝试从本地存储中获取已保存的文本内容
+    /* 嘗試從本地存儲中獲取已保存的文本內容 */
     const savedText = localStorage.getItem('savedText');
 
-    // 如果已保存的文本内容存在，则将其显示在可编辑文本区域中
+    /* 如果已保存的文本內容存在，則將其顯示在可編輯文本區域中 */
     if (savedText) {
       editableText.innerText = savedText;
     }
 
-    // 监听文本变化事件
-    editableText.addEventListener('input', function() {
-      // 将新的文本内容保存到本地存储中
+    /* 監聽文本變化事件 */
+    editableText.addEventListener('input', function () {
+      /* 將新的文本內容保存到本地存儲中 */
       localStorage.setItem('savedText', this.innerText);
     });
   </script>
 </body>
+
 </html>
