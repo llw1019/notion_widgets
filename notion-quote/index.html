@@ -149,6 +149,7 @@
     <div class="modes sans">
       <button class="light">Light</button>
       <button class="dark">Dark</button>
+      <button class="">Clear</button>
     </div>
     <div class="fonts">
       <button class="sans">
@@ -241,7 +242,7 @@
       /* A function to change the mode with the given value. */
       function changeMode(value) {
         body.className = value;
-        // localStorage.setItem('mode', value);
+        localStorage.setItem('mode', value);
       }
 
       /* A function to change the size based on the given value. */
