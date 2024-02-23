@@ -64,8 +64,10 @@
     /* Check the theme setting in localStorage when the page loads */
     document.addEventListener('DOMContentLoaded', function() {
       const theme = localStorage.getItem('mode');
-      if (theme) setTheme(theme);
-      updateButtonStyle(theme);
+      if (theme) {
+        setTheme(theme);
+        updateButtonStyle(theme);
+      }
     });
 
     /* Listen for text change events */
