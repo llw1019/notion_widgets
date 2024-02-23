@@ -15,6 +15,7 @@
       padding: 0;
       /* Prevent images from overflowing the screen */
       overflow: hidden;
+      background-color: white;
     }
 
     .photo {
@@ -23,6 +24,16 @@
       cursor: grab;
       /* Set the initial width and height of the photo */
       /* height: auto; */
+    }
+
+    @media (prefers-color-scheme: dark) {
+      body {
+        background-color: rgb(25, 25, 25); /* Black background in dark mode */
+      }
+
+      .photo {
+        filter: invert(100%); /* Invert effect for images in dark mode */
+      }
     }
   </style>
 </head>
