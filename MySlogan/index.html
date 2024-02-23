@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>可編輯的文本</title>
+  <title>Editable Text</title>
   <style>
     body {
       display: flex;
@@ -11,21 +11,32 @@
       justify-content: space-between;
       align-items: center;
       margin: 0;
-      padding: 0 20px;         /* 適當的頁面內邊距 */
-      background-color: white; /* 默認為白色背景 */
-      color: black;            /* 默認為黑色文字 */
+      padding: 0 20px;           /* Proper page padding */
+      background-color: white; /* Default white background */
+      color: black;            /* Default black text */
     }
 
     @media (prefers-color-scheme: dark) {
       body {
-        background-color: rgb(25, 25, 25); /* 暗黑模式下背景為黑色 */
-        color: white;                      /* 暗黑模式下文字為白色 */
+        background-color: rgb(25, 25, 25); /* Black background in dark mode */
+        color: white;                      /* White text in dark mode */
       }
     }
 
     .center {
       text-align: center;
-      flex-grow: 1; /* 讓文本部分佔據剩餘空間 */
+      flex-grow: 1; /* Make text area take remaining space */
+    }
+
+    #colorThemeButton {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      opacity: 0;
+    }
+    
+    #colorThemeButton:hover {
+      opacity: 0.6;
     }
   </style>
 </head>
@@ -35,23 +46,43 @@
   <div class="center" contenteditable="true" id="editableText">I can do all things…</div>
   <div>"</div>
 
+  <button id="colorThemeButton" onclick="toggleColorTheme()">Toggle Color Theme</button>
+
   <script>
-    /* 獲取可編輯文本元素 */
+    /* Get the editable text element */
     const editableText = document.getElementById('editableText');
 
-    /* 嘗試從本地存儲中獲取已保存的文本內容 */
+    /* Attempt to retrieve saved text content from local storage */
     const savedText = localStorage.getItem('savedText');
 
-    /* 如果已保存的文本內容存在，則將其顯示在可編輯文本區域中 */
-    if (savedText) {
-      editableText.innerText = savedText;
-    }
+    /* If saved text content exists, display it in the editable text area */
+    if (savedText) editableText.innerText = savedText;
+    
+    /* Check the theme setting in localStorage when the page loads */
+    document.addEventListener('DOMContentLoaded', function() {
+      const theme = localStorage.getItem('mode');
+      if (theme) setTheme(theme);
+    });
 
-    /* 監聽文本變化事件 */
+    /* Listen for text change events */
     editableText.addEventListener('input', function () {
-      /* 將新的文本內容保存到本地存儲中 */
+      /* Save the new text content to local storage */
       localStorage.setItem('savedText', this.innerText);
     });
+
+    /* Set the theme of the document body based on the given theme parameter. */
+    function setTheme(theme) {
+      document.body.style.backgroundColor = theme === 'dark' ? 'rgb(25, 25, 25)' : 'white';
+      document.body.style.color = theme === 'dark' ? 'white' : 'black';
+    }
+
+    /* Toggles the color theme by retrieving the current theme from local storage, 
+    setting the new theme, and updating the local storage with the new theme. */
+    function toggleColorTheme() {
+      const newTheme = localStorage.getItem('mode') === 'light' ? 'dark' : 'light';
+      setTheme(newTheme);
+      localStorage.setItem('mode', newTheme);
+    }
   </script>
 </body>
 
