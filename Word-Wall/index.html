@@ -19,35 +19,36 @@
 
     .photo {
       position: absolute;
-      border: 2px solid #000;
+      /* border: 2px solid #000; */
       cursor: grab;
       /* Set the initial width and height of the photo */
-      height: auto;
+      /* height: auto; */
     }
   </style>
 </head>
 
 <body>
   <script>
-    function fetchImages() {
-      const imageExtensions = ['.png', '.jpg', '.jpeg', '.gif'];
+    function getImageCount() {
+      let i = 1;
+      const existingPositions = [];
 
-      fetch('./Pic/')
-        .then(response => response.text())
-        .then(data => {
-          const parser = new DOMParser();
-          const doc = parser.parseFromString(data, 'text/html');
-          const existingPositions = [];
-          Array.from(doc.querySelectorAll('a')).forEach(a => {
-            const href = a.getAttribute('href');
-            if (imageExtensions.some(ext => href.endsWith(ext))) {
-              createPhotoElement(href, existingPositions);
-            }
-          });
-        })
-        .catch(error => {
-          console.error('Error fetching images:', error);
-        });
+      // Check for existence of images until one is not found
+      function checkImageExists() {
+        const img = new Image();
+        img.onload = function () {
+          createPhotoElement(`image_${i}.png`, existingPositions);
+          i++;
+          checkImageExists();
+        };
+        img.onerror = function () {
+          // All images are loaded or not found, do nothing
+        };
+        img.src = `Pic/image_${i}.png`;
+      }
+
+      // Start checking for image existence
+      checkImageExists();
     }
 
     function getRandomSize() {
@@ -57,8 +58,8 @@
     function getRandomPosition(existingPositions, width, height) {
       let x, y;
       do {
-        x = Math.random() * (window.innerWidth - width); 
-        y = Math.random() * (window.innerHeight - height); 
+        x = Math.random() * (window.innerWidth - width);
+        y = Math.random() * (window.innerHeight - height);
       } while (existingPositions.some(pos =>
         x < pos.x + pos.width &&
         x + width > pos.x &&
@@ -124,7 +125,9 @@
         window.addEventListener('mouseup', stopMoving);
       });
     }
-    fetchImages();
+
+    
+    getImageCount();
   </script>
 </body>
 
