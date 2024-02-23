@@ -11,7 +11,7 @@
       justify-content: space-between;
       align-items: center;
       margin: 0;
-      padding: 0 20px;           /* Proper page padding */
+      padding: 0 20px;         /* Proper page padding */
       background-color: white; /* Default white background */
       color: black;            /* Default black text */
     }
@@ -33,6 +33,9 @@
       bottom: 20px;
       right: 20px;
       opacity: 0;
+      background-color: white; /* Default button background color */
+      color: black;            /* Default button text color */
+      transition: background-color 0.3s, color 0.3s; /* Smooth transition for color change */
     }
     
     #colorThemeButton:hover {
@@ -62,6 +65,7 @@
     document.addEventListener('DOMContentLoaded', function() {
       const theme = localStorage.getItem('mode');
       if (theme) setTheme(theme);
+      updateButtonStyle(theme);
     });
 
     /* Listen for text change events */
@@ -69,6 +73,14 @@
       /* Save the new text content to local storage */
       localStorage.setItem('savedText', this.innerText);
     });
+
+    /* Updates the button style based on the current theme */
+    function updateButtonStyle(theme) {
+      const button = document.getElementById('colorThemeButton');
+      button.style.backgroundColor = theme === 'dark' ? 'white' : 'black';
+      button.style.color = theme === 'dark' ? 'black' : 'white';
+      button.innerText = theme === 'dark' ? 'Light' : 'Dark';
+    }
 
     /* Set the theme of the document body based on the given theme parameter. */
     function setTheme(theme) {
@@ -82,6 +94,7 @@
       const newTheme = localStorage.getItem('mode') === 'light' ? 'dark' : 'light';
       setTheme(newTheme);
       localStorage.setItem('mode', newTheme);
+      updateButtonStyle(newTheme);
     }
   </script>
 </body>
