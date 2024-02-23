@@ -40,6 +40,20 @@
 
 <body>
   <script>
+    /* Set the theme of the document body based on the given theme parameter. */
+    function setTheme(theme) {
+      document.body.style.backgroundColor = theme === 'dark' ? 'rgb(25, 25, 25)' : 'white';
+      document.photo.filter = theme === 'dark' ? 'invert(100%)' : 'none';
+    }
+
+    /* Check the theme setting in localStorage when the page loads */
+    document.addEventListener('DOMContentLoaded', function() {
+      const theme = localStorage.getItem('mode');
+      if (theme) {
+        setTheme(theme);
+      }
+    });
+
     function getImageCount() {
       let i = 1;
       const existingPositions = [];
