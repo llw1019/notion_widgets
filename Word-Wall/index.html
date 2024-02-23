@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      padding: 0;
+      /* Prevent images from overflowing the screen */
+      overflow: hidden;
+    }
+
+    .photo {
+      position: absolute;
+      border: 2px solid #000;
+      cursor: grab;
+      /* Set the initial width and height of the photo */
+      height: auto;
+    }
+  </style>
+</head>
+
+<body>
+  <script>
+    function fetchImages() {
+      const imageExtensions = ['.png', '.jpg', '.jpeg', '.gif'];
+
+      fetch('Pic/')
+        .then(response => response.text())
+        .then(data => {
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(data, 'text/html');
+          const existingPositions = [];
+          Array.from(doc.querySelectorAll('a')).forEach(a => {
+            const href = a.getAttribute('href');
+            if (imageExtensions.some(ext => href.endsWith(ext))) {
+              createPhotoElement(href, existingPositions);
+            }
+          });
+        })
+        .catch(error => {
+          console.error('Error fetching images:', error);
+        });
+    }
+
+    function getRandomSize() {
+      return Math.floor(Math.random() * (200 - 100 + 1)) + 100;
+    }
+
+    function getRandomPosition(existingPositions, width, height) {
+      let x, y;
+      do {
+        x = Math.random() * (window.innerWidth - width); 
+        y = Math.random() * (window.innerHeight - height); 
+      } while (existingPositions.some(pos =>
+        x < pos.x + pos.width &&
+        x + width > pos.x &&
+        y < pos.y + pos.height &&
+        y + height > pos.y
+      ));
+      existingPositions.push({ x, y, width, height });
+      return { x, y };
+    }
+
+    function createPhotoElement(photo, existingPositions) {
+      const img = document.createElement('img');
+      img.src = `Pic/${photo}`;
+      img.classList.add('photo');
+      const width = getRandomSize();
+      const height = getRandomSize();
+
+      // Get the actual width and height of the image
+      const imgWidth = img.naturalWidth;
+      const imgHeight = img.naturalHeight;
+
+      if (imgWidth > imgHeight) {
+        img.style.width = `${width}px`;
+        img.style.height = 'auto';
+      } else {
+        img.style.width = 'auto';
+        img.style.height = `${height}px`;
+      }
+      const { x, y } = getRandomPosition(existingPositions, width, height);
+      img.style.left = `${x}px`;
+      img.style.top = `${y}px`;
+      document.body.appendChild(img);
+
+      img.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        img.style.cursor = 'grabbing';
+        let initialX = e.clientX;
+        let initialY = e.clientY;
+
+        function movePhoto(e) {
+          const dx = e.clientX - initialX;
+          const dy = e.clientY - initialY;
+          let newX = img.offsetLeft + dx;
+          let newY = img.offsetTop + dy;
+
+          // Ensure the photo stays within the window bounds
+          newX = Math.max(0, Math.min(window.innerWidth - img.width, newX));
+          newY = Math.max(0, Math.min(window.innerHeight - img.height, newY));
+
+          img.style.left = `${newX}px`;
+          img.style.top = `${newY}px`;
+          initialX = e.clientX;
+          initialY = e.clientY;
+        }
+
+        function stopMoving() {
+          img.style.cursor = 'grab';
+          window.removeEventListener('mousemove', movePhoto);
+          window.removeEventListener('mouseup', stopMoving);
+        }
+
+        window.addEventListener('mousemove', movePhoto);
+        window.addEventListener('mouseup', stopMoving);
+      });
+    }
+    fetchImages();
+  </script>
+</body>
+
+</html>
