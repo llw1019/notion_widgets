@@ -77,9 +77,10 @@
     function getRandomSize() {
       const minPercentage = 20; // 10%
       const maxPercentage = 40; // 20%
+      const referenceSize = (window.innerWidth > window.innerHeight) ? window.innerHeight : window.innerWidth;
 
-      const minSize = Math.floor((window.innerWidth * minPercentage) / 100);
-      const maxSize = Math.floor((window.innerWidth * maxPercentage) / 100);
+      const minSize = Math.floor((referenceSize * minPercentage) / 100);
+      const maxSize = Math.floor((referenceSize * maxPercentage) / 100);
 
       return Math.floor(Math.random() * (maxSize - minSize + 1)) + minSize;
     }
