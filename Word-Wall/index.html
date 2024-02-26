@@ -49,15 +49,15 @@
     });
 
     function getImageCount() {
-      let i = 1;
+      let count = 1;
       const existingPositions = [];
 
       // Check for existence of images until one is not found
       function checkImageExists() {
         const img = new Image();
         img.onload = function () {
-          createPhotoElement(`image_${i}.png`, existingPositions);
-          i++;
+          createPhotoElement(`image_${count}.png`, existingPositions);
+          count++;
           checkImageExists();
         };
         img.onerror = function () {
@@ -67,7 +67,7 @@
           //   setTheme(theme);
           // }
         };
-        img.src = `Pic/image_${i}.png`;
+        img.src = `Pic/image_${count}.png`;
       }
 
       // Start checking for image existence
@@ -75,52 +75,50 @@
     }
 
     function getRandomSize() {
-      const minPercentage = 20; // 10%
-      const maxPercentage = 40; // 20%
       const referenceSize = (window.innerWidth > window.innerHeight) ? window.innerHeight : window.innerWidth;
-
+      
+      const minPercentage = 20; // 20%
+      const maxPercentage = 60; // 60%
+      
       const minSize = Math.floor((referenceSize * minPercentage) / 100);
       const maxSize = Math.floor((referenceSize * maxPercentage) / 100);
-
+      
       return Math.floor(Math.random() * (maxSize - minSize + 1)) + minSize;
     }
 
-    function getRandomPosition(existingPositions, width, height) {
-      let x, y;
+    function getRandomPosition(existingPositions) {
+      let x, y, size;
       do {
-        x = Math.random() * (window.innerWidth - width);
-        y = Math.random() * (window.innerHeight - height);
+        size = getRandomSize();
+        x = Math.random() * (window.innerWidth - size);
+        y = Math.random() * (window.innerHeight - size);
       } while (existingPositions.some(pos =>
-        x < pos.x + pos.width &&
-        x + width > pos.x &&
-        y < pos.y + pos.height &&
-        y + height > pos.y
+        x < pos.x + pos.size &&
+        x + size > pos.x &&
+        y < pos.y + pos.size &&
+        y + size > pos.y
       ));
-      existingPositions.push({ x, y, width, height });
-      return { x, y };
+      existingPositions.push({ x, y, size });
+      return { x, y, size };
     }
 
     function createPhotoElement(photo, existingPositions) {
       const img = document.createElement('img');
       img.src = `Pic/${photo}`;
       img.classList.add('photo');
-      let width = getRandomSize();
-      let height = getRandomSize();
-
+      
       // Get the actual width and height of the image
       const imgWidth = img.naturalWidth;
       const imgHeight = img.naturalHeight;
-
+      const { x, y, size } = getRandomPosition(existingPositions);
+      
       if (imgWidth > imgHeight) {
-        img.style.width = `${width}px`;
+        img.style.width = `${size}px`;
         img.style.height = 'auto';
-        height = width;
       } else {
         img.style.width = 'auto';
-        img.style.height = `${height}px`;
-        width = height;
+        img.style.height = `${size}px`;
       }
-      const { x, y } = getRandomPosition(existingPositions, width, height);
       img.style.left = `${x}px`;
       img.style.top = `${y}px`;
 
