@@ -83,19 +83,27 @@
       return Math.floor(Math.random() * (maxSize - minSize + 1)) + minSize;
     }
 
-    function getRandomPosition(existingPositions) {
-      let x, y, size;
+    function getRandomPosition(existingPositions, imgWidth, imgHeight) {
+      let x, y, width, height, size;
       do {
         size = getRandomSize();
-        x = Math.random() * (window.innerWidth - size);
-        y = Math.random() * (window.innerHeight - size);
+        if (imgWidth > imgHeight) {
+          width = size;
+          height = Math.floor(size * (imgHeight / imgWidth));
+        } else {
+          width = Math.floor(size * (imgWidth / imgHeight));
+          height = size;
+        }
+        
+        x = Math.random() * (window.innerWidth - width);
+        y = Math.random() * (window.innerHeight - height);
       } while (existingPositions.some(pos =>
-        x < pos.x + pos.size &&
-        x + size > pos.x &&
-        y < pos.y + pos.size &&
-        y + size > pos.y
+        x < pos.x + pos.width &&
+        x + width > pos.x &&
+        y < pos.y + pos.height &&
+        y + height > pos.y
       ));
-      existingPositions.push({ x, y, size });
+      existingPositions.push({ x, y, width, height });
       return { x, y, size };
     }
 
@@ -107,7 +115,7 @@
       // Get the actual width and height of the image
       const imgWidth = img.naturalWidth;
       const imgHeight = img.naturalHeight;
-      const { x, y, size } = getRandomPosition(existingPositions);
+      const { x, y, size } = getRandomPosition(existingPositions, imgWidth, imgHeight);
       
       if (imgWidth > imgHeight) {
         img.style.width = `${size}px`;
