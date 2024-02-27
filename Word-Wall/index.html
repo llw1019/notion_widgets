@@ -41,6 +41,7 @@
 <body>
   <script>
     const theme = localStorage.getItem('mode');
+    let img_count = 1;
 
     /* Check the theme setting in localStorage when the page loads */
     document.addEventListener('DOMContentLoaded', function() {
@@ -49,25 +50,21 @@
     });
 
     function getImageCount() {
-      let i = 1;
       const existingPositions = [];
 
       // Check for existence of images until one is not found
       function checkImageExists() {
         const img = new Image();
         img.onload = function () {
-          createPhotoElement(`image_${i}.png`, existingPositions);
-          i++;
+          img_count++;
           checkImageExists();
         };
         img.onerror = function () {
-          // All images are loaded or not found, do nothing
-          // const theme = localStorage.getItem('mode');
-          // if (theme) {
-          //   setTheme(theme);
-          // }
+          for (let i = 1; i < img_count; i++) {
+            createPhotoElement(`image_${i}.png`, existingPositions);
+          }
         };
-        img.src = `Pic/image_${i}.png`;
+        img.src = `Pic/image_${img_count}.png`;
       }
 
       // Start checking for image existence
@@ -75,19 +72,29 @@
     }
 
     function getRandomSize() {
-      const minPercentage = 20; // 10%
-      const maxPercentage = 40; // 20%
       const referenceSize = (window.innerWidth > window.innerHeight) ? window.innerHeight : window.innerWidth;
-
-      const minSize = Math.floor((referenceSize * minPercentage) / 100);
-      const maxSize = Math.floor((referenceSize * maxPercentage) / 100);
-
+      
+      const minPercentage = 1 / img_count; // 20%
+      const maxPercentage = 3 / img_count; // 60%
+      
+      const minSize = Math.floor(referenceSize * minPercentage);
+      const maxSize = Math.floor(referenceSize * maxPercentage);
+      
       return Math.floor(Math.random() * (maxSize - minSize + 1)) + minSize;
     }
 
-    function getRandomPosition(existingPositions, width, height) {
-      let x, y;
+    function getRandomPosition(existingPositions, imgWidth, imgHeight) {
+      let x, y, width, height, size;
       do {
+        size = getRandomSize();
+        if (imgWidth > imgHeight) {
+          width = size;
+          height = Math.floor(size * (imgHeight / imgWidth));
+        } else {
+          width = Math.floor(size * (imgWidth / imgHeight));
+          height = size;
+        }
+        
         x = Math.random() * (window.innerWidth - width);
         y = Math.random() * (window.innerHeight - height);
       } while (existingPositions.some(pos =>
@@ -97,30 +104,26 @@
         y + height > pos.y
       ));
       existingPositions.push({ x, y, width, height });
-      return { x, y };
+      return { x, y, size };
     }
 
     function createPhotoElement(photo, existingPositions) {
       const img = document.createElement('img');
       img.src = `Pic/${photo}`;
       img.classList.add('photo');
-      let width = getRandomSize();
-      let height = getRandomSize();
-
+      
       // Get the actual width and height of the image
       const imgWidth = img.naturalWidth;
       const imgHeight = img.naturalHeight;
-
+      const { x, y, size } = getRandomPosition(existingPositions, imgWidth, imgHeight);
+      
       if (imgWidth > imgHeight) {
-        img.style.width = `${width}px`;
+        img.style.width = `${size}px`;
         img.style.height = 'auto';
-        height = width;
       } else {
         img.style.width = 'auto';
-        img.style.height = `${height}px`;
-        width = height;
+        img.style.height = `${size}px`;
       }
-      const { x, y } = getRandomPosition(existingPositions, width, height);
       img.style.left = `${x}px`;
       img.style.top = `${y}px`;
 
