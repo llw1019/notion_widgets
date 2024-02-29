@@ -163,6 +163,24 @@
         window.addEventListener('mousemove', movePhoto);
         window.addEventListener('mouseup', stopMoving);
       });
+
+      // Add mousewheel event listener for scaling
+      img.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const delta = e.deltaY || e.detail || e.wheelDelta;
+        let newSize;
+
+        if (delta > 0) {
+          newSize = img.width * 0.9;
+        } else {
+          newSize = Math.min(img.width * 1.1,
+            img.width + window.innerWidth - (img.offsetLeft + img.offsetWidth),
+            img.width + window.innerHeight - (img.offsetTop + img.offsetHeight));
+        }
+
+        img.style.width = `${newSize}px`;
+        img.style.height = 'auto';
+      });
     }
     
     getImageCount();
