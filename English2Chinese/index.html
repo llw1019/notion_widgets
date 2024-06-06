@@ -32,11 +32,16 @@
         .vocab-container p {
             font-size: 18px;
             margin: 5px 0;
+            text-align: left;
         }
-        
+
         @media (prefers-color-scheme: dark) {
             body {
-                background-color: rgb(25, 25, 25); /* Black background in dark mode */
+                background-color: rgb(25, 25, 25);
+            }
+            .vocab-container {
+                background-color: #333;
+                color: white;
             }
         }
     </style>
@@ -54,22 +59,21 @@
     <script src="vocab.js"></script>
 
     <script>
-        const theme = localStorage.getItem('mode');
-        
-        /* Check the theme setting in localStorage when the page loads */
         document.addEventListener('DOMContentLoaded', function() {
-            if (theme)
-                document.body.style.backgroundColor = theme === 'dark' ? 'rgb(25, 25, 25)' : 'white';
-        });
+            const theme = localStorage.getItem('mode');
 
-        document.addEventListener('DOMContentLoaded', () => {
+            // 根據 localStorage 中的主題設置背景顏色
+            if (theme) {
+                document.body.style.backgroundColor = theme === 'dark' ? 'rgb(25, 25, 25)' : 'white';
+            }
+
             // 確保 vocabList 已經被加載
             if (typeof vocabList !== 'undefined') {
                 const randomVocab = vocabList[Math.floor(Math.random() * vocabList.length)];
                 document.getElementById('english-word').textContent = randomVocab.english;
                 document.getElementById('chinese-translation').textContent = `翻譯: ${randomVocab.chinese}`;
                 document.getElementById('part-of-speech').textContent = `詞性: ${randomVocab.partOfSpeech}`;
-                document.getElementById('phonetics').textContent = `KK音標: ${randomVocab.phonetics}`;
+                document.getElementById('phonetics').textContent = `音標: ${randomVocab.phonetics}`;
                 document.getElementById('example-sentence').textContent = `例句: ${randomVocab.example}`;
             } else {
                 document.getElementById('english-word').textContent = 'Error loading vocabulary';
