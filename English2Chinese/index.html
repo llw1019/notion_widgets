@@ -57,9 +57,12 @@
         <p id="example-sentence"></p>
     </div>
 
+    <!-- 引用外部的 vocab.js 文件 -->
+    <!--<script src="vocab.js"></script>-->
+    <script src="words.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
-            // 設置主題
+            /* 設置主題 */
             const theme = localStorage.getItem('mode');
             if (theme) {
                 document.body.style.backgroundColor = theme === 'dark' ? 'rgb(25, 25, 25)' : 'white';
@@ -73,9 +76,12 @@
                 }
             }
 
-            // 獲取隨機單詞和翻譯及詳細信息
+            /* 從本地單詞數組中獲取隨機單詞和翻譯及詳細信息 */
             try {
-                const randomWord = await fetchRandomWord();
+                /* USE API BEGIN */
+                //const randomWord = await fetchRandomWord(); /* API. */
+                const randomWord = words[Math.floor(Math.random() * words.length)]; /* Local (words.js). */
+
                 document.getElementById('english-word').textContent = randomWord;
 
                 const chineseTranslation = await fetchTranslation(randomWord);
@@ -85,13 +91,25 @@
 
                 if (details) {
                     document.getElementById('part-of-speech').textContent = `詞性: ${details.partOfSpeech}`;
-                    document.getElementById('phonetics').textContent = `KK音標: ${details.phonetics}`;
+                    document.getElementById('phonetics').textContent = `音標: ${details.phonetics}`;
                     document.getElementById('example-sentence').textContent = `例句: ${details.exampleSentence}`;
                 } else {
                     document.getElementById('part-of-speech').textContent = '';
                     document.getElementById('phonetics').textContent = '';
                     document.getElementById('example-sentence').textContent = '';
                 }
+                /* USE API END */
+                
+                /* USE vocab.js BEGIN */
+                /* 如果 vocabList 已經被加載，從中選擇一個單詞顯示 */
+                // if (typeof vocabList !== 'undefined') {
+                //     const randomVocab = vocabList[Math.floor(Math.random() * vocabList.length)];
+                //     document.getElementById('english-word').textContent = randomVocab.english;
+                //     document.getElementById('chinese-translation').textContent = `翻譯: ${randomVocab.chinese}`;
+                //     document.getElementById('part-of-speech').textContent = `詞性: ${randomVocab.partOfSpeech}`;
+                //     document.getElementById('phonetics').textContent = `音標: ${randomVocab.phonetics}`;
+                //     document.getElementById('example-sentence').textContent = `例句: ${randomVocab.example}`;
+                /* USE vocab.js END */
             } catch (error) {
                 console.error('Error loading vocabulary:', error);
                 document.getElementById('english-word').textContent = 'Error loading vocabulary';
@@ -117,7 +135,7 @@
                 
                 const data = await response.json();
                 const partOfSpeech = data[0].meanings[0].partOfSpeech;
-                const phonetics = data[0].phonetics[0]?.text || 'N/A';
+                const phonetics = data[0].phonetic || 'N/A';
                 const exampleSentence = data[0].meanings[0].definitions[0].example || 'No example available';
 
                 return { partOfSpeech, phonetics, exampleSentence };
