@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vocabulary Flashcards</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+        }
+        .vocab-container {
+            text-align: center;
+            background-color: #fff;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+        .vocab-container h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        .vocab-container p {
+            font-size: 18px;
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="vocab-container">
+        <h1 id="english-word">Loading...</h1>
+        <p id="chinese-translation"></p>
+        <p id="part-of-speech"></p>
+        <p id="phonetics"></p>
+        <p id="example-sentence"></p>
+    </div>
+
+    <!-- 引用外部的 vocab.js 文件 -->
+    <script src="vocab.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // 確保 vocabList 已經被加載
+            if (typeof vocabList !== 'undefined') {
+                const randomVocab = vocabList[Math.floor(Math.random() * vocabList.length)];
+                document.getElementById('english-word').textContent = randomVocab.english;
+                document.getElementById('chinese-translation').textContent = `翻譯: ${randomVocab.chinese}`;
+                document.getElementById('part-of-speech').textContent = `詞性: ${randomVocab.partOfSpeech}`;
+                document.getElementById('phonetics').textContent = `KK音標: ${randomVocab.phonetics}`;
+                document.getElementById('example-sentence').textContent = `例句: ${randomVocab.example}`;
+            } else {
+                document.getElementById('english-word').textContent = 'Error loading vocabulary';
+            }
+        });
+    </script>
+</body>
+</html>
