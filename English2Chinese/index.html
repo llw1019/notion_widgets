@@ -133,7 +133,12 @@
 
             /* 監聽點擊事件 */
             document.querySelector('.vocab-container').addEventListener('click', async () => {
-                updateVocabulary();
+                // 檢查是否有選取的文字
+                const selection = window.getSelection().toString();
+                if (!selection) {
+                    // 如果沒有選取的文字，觸發更新操作
+                    updateVocabulary();
+                }
             });
 
             /* 監聽觸摸事件 */
