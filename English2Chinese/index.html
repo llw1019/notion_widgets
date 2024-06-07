@@ -133,17 +133,17 @@
 
             /* 監聽點擊事件 */
             document.querySelector('.vocab-container').addEventListener('click', async () => {
-                // 檢查是否有選取的文字
+                /* 檢查是否有選取的文字 */
                 const selection = window.getSelection().toString();
                 if (!selection) {
-                    // 如果沒有選取的文字，觸發更新操作
+                    /* 如果沒有選取的文字，觸發更新操作 */
                     updateVocabulary();
                 }
             });
 
             /* 監聽觸摸事件 */
-            var startY = 0; // 起始Y坐標
-            var dist = 0; // 移動距離
+            var startY = 0; /* 起始Y坐標 */
+            var dist = 0; /* 移動距離 */
 
             document.addEventListener('touchstart', handleTouchStart, false);
             document.addEventListener('touchmove', handleTouchMove, false);
@@ -159,8 +159,8 @@
             }
 
             document.addEventListener('touchend', function () {
-                if (dist > 50) { // 如果移動距離大於50px，認為是下拉操作
-                    // 觸發更新操作
+                if (dist > 50) { /* 如果移動距離大於50px，認為是下拉操作 */
+                    /* 觸發更新操作 */
                     updateVocabulary();
                 }
             }, false);
@@ -180,17 +180,31 @@
 
         async function fetchWordDetails(word) {
             try {
+                const apiKey = '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';
+                const prompt = `Please provide the following details for the English word "${word}": 
+                                1. Part of speech
+                                2. KK phonetics
+                                3. Definition
+                                4. An example sentence
+                                and return the details in the following JSON format:
+                                {\n
+                                    \"part_of_speech\": \"<part_of_speech>\",\n
+                                    \"phonetics\": \"<phonetics>\",\n
+                                    \"definition\": \"<definition>\",\n
+                                    \"example_sentence\": \"<example_sentence>\"\n
+                                }`;
+
                 const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': 'Bearer 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' // Groq API Key
+                        'Authorization': `Bearer ${apiKey}`
                     },
                     body: JSON.stringify({
                         "messages": [
                             {
                                 "role": "user",
-                                "content": `Provide details for the word '${word}' in the following JSON format:\n{\n\"part_of_speech\": \"<part_of_speech>\",\n\"phonetics\": \"<phonetics>\",\n\"definition\": \"<definition>\",\n\"example_sentence\": \"<example_sentence>\"\n}`
+                                "content": prompt
                                 }
                         ],
                         "model": "llama3-8b-8192",
