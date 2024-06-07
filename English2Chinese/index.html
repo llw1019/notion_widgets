@@ -128,6 +128,8 @@
                 }
             }
 
+            await checkAndSetApiKey();
+
             /* 初始化單詞和相關信息 */
             updateVocabulary();
 
@@ -166,6 +168,18 @@
             }, false);
         });
 
+        async function checkAndSetApiKey() {
+            let apiKey = localStorage.getItem('Groq_apiKey');
+            if (!apiKey) {
+                apiKey = prompt("請輸入您的 API Key:");
+                if (apiKey) {
+                    localStorage.setItem('Groq_apiKey', apiKey);
+                } else {
+                    alert("您必須提供 API Key 才能使用此應用程式。");
+                }
+            }
+        }
+
         async function fetchRandomWord() {
             const response = await fetch('https://random-word-api.herokuapp.com/word?number=1');
             const words = await response.json();
@@ -180,7 +194,7 @@
 
         async function fetchWordDetails(word) {
             try {
-                const apiKey = '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';
+                const apiKey = localStorage.getItem('Groq_apiKey');
                 const prompt = `Please provide the following details for the English word "${word}": 
                                 1. Part of speech
                                 2. KK phonetics
@@ -218,6 +232,18 @@
                         "stop": null
                     })
                 });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    if (errorData.error && errorData.error.code === 'invalid_api_key') {
+                        alert("無效的 API Key，請重新輸入。");
+                        localStorage.removeItem('Groq_apiKey');
+                        await checkAndSetApiKey();
+                        return fetchWordDetails(word);
+                    }
+                    throw new Error(errorData.error.message);
+                }
+
                 const data = await response.json();
                 const content = data.choices[0].message.content;
 
