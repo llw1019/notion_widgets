@@ -2638,7 +2638,7 @@ const words = [
   "sloppy",
   "slot",
   "slump",
-  "smoothl",
+  "smoothly",
   "soar",
   "society",
   "software",

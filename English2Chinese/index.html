@@ -62,27 +62,21 @@
     <!--<script src="vocab.js"></script>-->
     <script src="words.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', async () => {
-            /* 設置主題 */
-            const theme = localStorage.getItem('mode');
-            if (theme) {
-                document.body.style.backgroundColor = theme === 'dark' ? 'rgb(25, 25, 25)' : 'white';
-                const vocabContainer = document.querySelector('.vocab-container');
-                if (theme === 'dark') {
-                    vocabContainer.style.backgroundColor = '#333';
-                    vocabContainer.style.color = 'white';
-                } else {
-                    vocabContainer.style.backgroundColor = '#f0f0f0';
-                    vocabContainer.style.color = 'black';
-                }
-            }
-
+        async function updateVocabulary() {
             /* 從本地單詞數組中獲取隨機單詞和翻譯及詳細信息 */
             try {
+                /* 清除所有內容 */
+                document.getElementById('english-word').textContent = '';
+                document.getElementById('chinese-translation').textContent = '';
+                document.getElementById('part-of-speech').textContent = '';
+                document.getElementById('phonetics').textContent = '';
+                document.getElementById('definition').textContent = '';
+                document.getElementById('example-sentence').textContent = '';
+
+                /* 更新單詞和相關信息 */
                 /* USE API BEGIN */
                 //const randomWord = await fetchRandomWord(); /* API. */
                 const randomWord = words[Math.floor(Math.random() * words.length)]; /* Local (words.js). */
-
                 document.getElementById('english-word').textContent = randomWord;
 
                 const chineseTranslation = await fetchTranslation(randomWord);
@@ -102,7 +96,7 @@
                     document.getElementById('example-sentence').textContent = '';
                 }
                 /* USE API END */
-                
+
                 /* USE vocab.js BEGIN */
                 /* 如果 vocabList 已經被加載，從中選擇一個單詞顯示 */
                 // if (typeof vocabList !== 'undefined') {
@@ -117,6 +111,30 @@
                 console.error('Error loading vocabulary:', error);
                 document.getElementById('english-word').textContent = 'Error loading vocabulary';
             }
+        }
+        
+        document.addEventListener('DOMContentLoaded', async () => {
+            /* 設置主題 */
+            const theme = localStorage.getItem('mode');
+            if (theme) {
+                document.body.style.backgroundColor = theme === 'dark' ? 'rgb(25, 25, 25)' : 'white';
+                const vocabContainer = document.querySelector('.vocab-container');
+                if (theme === 'dark') {
+                    vocabContainer.style.backgroundColor = '#333';
+                    vocabContainer.style.color = 'white';
+                } else {
+                    vocabContainer.style.backgroundColor = '#f0f0f0';
+                    vocabContainer.style.color = 'black';
+                }
+            }
+
+            /* 初始化單詞和相關信息 */
+            updateVocabulary();
+
+            /* 監聽點擊事件 */
+            document.querySelector('.vocab-container').addEventListener('click', async () => {
+                updateVocabulary();
+            });
         });
 
         async function fetchRandomWord() {
