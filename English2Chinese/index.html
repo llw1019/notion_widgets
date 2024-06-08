@@ -195,43 +195,47 @@
                     }
                 }
             }, false);
+
+
+            /* 監聽 API Key 保存按鈕點擊事件 */
+            document.getElementById('api-key-button').addEventListener('click', handleApiKeySave);
         });
 
         async function checkAndSetApiKey() {
             let apiKey = localStorage.getItem('Groq_apiKey');
             if (!apiKey) {
-                await showApiKeyForm();
+                showApiKeyForm();
             } else {
                 document.getElementById('api-key-form').style.display = 'none';
             }
         }
 
-        async function showApiKeyForm() {
+        function showApiKeyForm() {
             document.getElementById('api-key-input').disabled = false;
             document.getElementById('api-key-button').disabled = false;
             document.getElementById('api-key-form').style.display = 'block';
-            document.getElementById('api-key-button').addEventListener('click', async () => {
-                const apiKey = document.getElementById('api-key-input').value;
-                if (apiKey) {
-                    document.getElementById('api-key-error').style.display = 'none';
-                    document.getElementById('api-key-input').disabled = true;
-                    document.getElementById('api-key-button').disabled = true;
-                    const isValid = await validateApiKey(apiKey);
-                    if (isValid) {
-                        localStorage.setItem('Groq_apiKey', apiKey);
-                        document.getElementById('api-key-form').style.display = 'none';
-                        document.getElementById('api-key-error').style.display = 'none';
-                        updateVocabulary();
-                    } else {
-                        document.getElementById('api-key-error').style.display = 'block';
-                        document.getElementById('api-key-input').disabled = false;
-                        document.getElementById('api-key-button').disabled = false;
+        }
 
-                    }
+        async function handleApiKeySave() {
+            const apiKey = document.getElementById('api-key-input').value;
+            if (apiKey) {
+                document.getElementById('api-key-error').style.display = 'none';
+                document.getElementById('api-key-input').disabled = true;
+                document.getElementById('api-key-button').disabled = true;
+                const isValid = await validateApiKey(apiKey);
+                if (isValid) {
+                    localStorage.setItem('Groq_apiKey', apiKey);
+                    document.getElementById('api-key-form').style.display = 'none';
+                    document.getElementById('api-key-error').style.display = 'none';
+                    updateVocabulary();
                 } else {
                     document.getElementById('api-key-error').style.display = 'block';
+                    document.getElementById('api-key-input').disabled = false;
+                    document.getElementById('api-key-button').disabled = false;
                 }
-            });
+            } else {
+                document.getElementById('api-key-error').style.display = 'block';
+            }
         }
 
         async function validateApiKey(apiKey) {
@@ -334,7 +338,7 @@
                     if (errorData.error && errorData.error.code === 'invalid_api_key') {
                         localStorage.removeItem('Groq_apiKey');
                         document.getElementById('api-key-error').style.display = 'block';
-                        await showApiKeyForm();
+                        showApiKeyForm();
                         return null;
                     }
                     throw new Error(errorData.error.message);
