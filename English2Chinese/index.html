@@ -87,78 +87,8 @@
     <!--<script src="vocab.js"></script>-->
     <script src="words.js"></script>
     <script>
-        async function updateVocabulary() {
-            /* 從本地單詞數組中獲取隨機單詞和翻譯及詳細信息 */
-            try {
-                const englishWordElement = document.getElementById('english-word');
-                const chineseTranslationElement = document.getElementById('chinese-translation');
-                const partOfSpeechElement = document.getElementById('part-of-speech');
-                const phoneticsElement = document.getElementById('phonetics');
-                const definitionElement = document.getElementById('definition');
-                const exampleSentenceElement = document.getElementById('example-sentence');
-
-                /* 清除所有內容 */
-                englishWordElement.textContent = '';
-                chineseTranslationElement.textContent = '';
-                partOfSpeechElement.textContent = '';
-                phoneticsElement.textContent = '';
-                definitionElement.textContent = '';
-                exampleSentenceElement.textContent = '';
-
-                /* 更新單詞和相關信息 */
-                /* USE API BEGIN */
-                //const randomWord = await fetchRandomWord(); /* API. */
-                const randomWord = words[Math.floor(Math.random() * words.length)]; /* Local (words.js). */
-                englishWordElement.textContent = randomWord;
-
-                const chineseTranslation = await fetchTranslation(randomWord);
-                chineseTranslationElement.textContent = `翻譯: ${chineseTranslation}`;
-
-                const details = await fetchWordDetails(randomWord);
-
-                if (details) {
-                    partOfSpeechElement.textContent = `詞性: ${details.partOfSpeech}`;
-                    phoneticsElement.textContent = `音標: ${details.phonetics}`;
-                    //definitionElement.textContent = `定義: ${details.definition}`;
-                    exampleSentenceElement.textContent = `例句: ${details.exampleSentence}`;
-                } else {
-                    partOfSpeechElement.textContent = '';
-                    phoneticsElement.textContent = '';
-                    definitionElement.textContent = '';
-                    exampleSentenceElement.textContent = '';
-                }
-                /* USE API END */
-
-                /* USE vocab.js BEGIN */
-                /* 如果 vocabList 已經被加載，從中選擇一個單詞顯示 */
-                // if (typeof vocabList !== 'undefined') {
-                //     const randomVocab = vocabList[Math.floor(Math.random() * vocabList.length)];
-                //     englishWordElement.textContent = randomVocab.english;
-                //     chineseTranslationElement.textContent = `翻譯: ${randomVocab.chinese}`;
-                //     partOfSpeechElement.textContent = `詞性: ${randomVocab.partOfSpeech}`;
-                //     phoneticsElement.textContent = `音標: ${randomVocab.phonetics}`;
-                //     exampleSentenceElement.textContent = `例句: ${randomVocab.example}`;
-                /* USE vocab.js END */
-            } catch (error) {
-                console.error('Error loading vocabulary:', error);
-                document.getElementById('english-word').textContent = 'Error loading vocabulary';
-            }
-        }
-
         document.addEventListener('DOMContentLoaded', async () => {
-            /* 設置主題 */
-            const theme = localStorage.getItem('mode');
-            if (theme) {
-                document.body.style.backgroundColor = theme === 'dark' ? 'rgb(25, 25, 25)' : 'white';
-                const vocabContainer = document.querySelector('.vocab-container');
-                if (theme === 'dark') {
-                    vocabContainer.style.backgroundColor = '#333';
-                    vocabContainer.style.color = 'white';
-                } else {
-                    vocabContainer.style.backgroundColor = '#f0f0f0';
-                    vocabContainer.style.color = 'black';
-                }
-            }
+            setThemeFromLocalStorage();
 
             await checkAndSetApiKey();
 
@@ -166,49 +96,27 @@
             updateVocabulary();
 
             /* 監聽點擊事件 */
-            document.querySelector('.vocab-container').addEventListener('click', async () => {
-                if (document.getElementById('api-key-form').style.display !== 'block') {
-                    /* 檢查是否有選取的文字 */
-                    const selection = window.getSelection().toString();
-                    if (!selection) {
-                        /* 如果沒有選取的文字，觸發更新操作 */
-                        updateVocabulary();
-                    }
-                }
-            });
+            setupClickListener();
 
             /* 監聽觸摸事件 */
-            var startY = 0; /* 起始Y坐標 */
-            var dist = 0; /* 移動距離 */
-
-            document.addEventListener('touchstart', handleTouchStart, false);
-            document.addEventListener('touchmove', handleTouchMove, false);
-
-            function handleTouchStart(event) {
-                startY = event.touches[0].clientY;
-                dist = 0;
-            }
-
-            function handleTouchMove(event) {
-                var currentY = event.touches[0].clientY;
-                dist = currentY - startY;
-            }
-
-            document.addEventListener('touchend', function () {
-                if (document.getElementById('api-key-form').style.display !== 'block') {
-                    if (dist > 50) { /* 如果移動距離大於50px，認為是下拉操作 */
-                        /* 觸發更新操作 */
-                        updateVocabulary();
-                    }
-                }
-            }, false);
+            handleTouchEvents();
 
             /* 監聽 API Key 保存按鈕點擊事件 */
             document.getElementById('api-key-button').addEventListener('click', handleApiKeySave);
         });
 
+        function setThemeFromLocalStorage() {
+            const theme = localStorage.getItem('mode');
+            if (theme) {
+                document.body.style.backgroundColor = theme === 'dark' ? 'rgb(25, 25, 25)' : 'white';
+                const vocabContainer = document.querySelector('.vocab-container');
+                vocabContainer.style.backgroundColor = theme === 'dark' ? '#333' : '#f0f0f0';
+                vocabContainer.style.color = theme === 'dark' ? 'white' : 'black';
+            }
+        }
+
         async function checkAndSetApiKey() {
-            let apiKey = localStorage.getItem('Groq_apiKey');
+            const apiKey = localStorage.getItem('Groq_apiKey');
             if (!apiKey) {
                 showApiKeyForm();
             } else {
@@ -217,42 +125,44 @@
         }
 
         function showApiKeyForm() {
-            const apiKeyForm = document.getElementById('api-key-form');
-            const apiKeyInput = document.getElementById('api-key-input');
-            const apiKeyButton = document.getElementById('api-key-button');
-            const apiKeyError = document.getElementById('api-key-error');
-
-            apiKeyInput.disabled = false;
-            apiKeyButton.disabled = false;
-            apiKeyForm.style.display = 'block';
-            apiKeyError.style.display = 'none';
+            document.getElementById('api-key-form').style.display = 'block';
+            document.getElementById('api-key-error').style.display = 'none';
+            document.getElementById('api-key-input').disabled = false;
+            document.getElementById('api-key-button').disabled = false;
         }
 
         async function handleApiKeySave() {
-            const apiKeyForm = document.getElementById('api-key-form');
             const apiKeyInput = document.getElementById('api-key-input');
             const apiKeyButton = document.getElementById('api-key-button');
             const apiKeyError = document.getElementById('api-key-error');
             const apiKey = apiKeyInput.value;
 
             if (apiKey) {
-                apiKeyInput.disabled = true;
-                apiKeyButton.disabled = true;
+                disableApiKeyInput(apiKeyInput, apiKeyButton);
                 apiKeyError.style.display = 'none';
 
                 const isValid = await validateApiKey(apiKey);
                 if (isValid) {
                     localStorage.setItem('Groq_apiKey', apiKey);
-                    apiKeyForm.style.display = 'none';
+                    document.getElementById('api-key-form').style.display = 'none';
                     updateVocabulary();
                 } else {
-                    apiKeyInput.disabled = false;
-                    apiKeyButton.disabled = false;
+                    enableApiKeyInput(apiKeyInput, apiKeyButton);
                     apiKeyError.style.display = 'block';
                 }
             } else {
                 apiKeyError.style.display = 'block';
             }
+        }
+
+        function disableApiKeyInput(input, button) {
+            input.disabled = true;
+            button.disabled = true;
+        }
+
+        function enableApiKeyInput(input, button) {
+            input.disabled = false;
+            button.disabled = false;
         }
 
         async function validateApiKey(apiKey) {
@@ -295,6 +205,55 @@
                 console.error('API Key validation error:', error);
                 return false;
             }
+        }
+
+        async function updateVocabulary() {
+            try {
+                const englishWordElement = document.getElementById('english-word');
+                const chineseTranslationElement = document.getElementById('chinese-translation');
+                const partOfSpeechElement = document.getElementById('part-of-speech');
+                const phoneticsElement = document.getElementById('phonetics');
+                const definitionElement = document.getElementById('definition');
+                const exampleSentenceElement = document.getElementById('example-sentence');
+
+                clearTextContent(englishWordElement, chineseTranslationElement, partOfSpeechElement, phoneticsElement, definitionElement, exampleSentenceElement);
+
+                /* 更新單詞和相關信息 */
+                /* USE API BEGIN */
+                //const randomWord = await fetchRandomWord(); /* API. */
+                const randomWord = words[Math.floor(Math.random() * words.length)]; /* Local (words.js). */
+                englishWordElement.textContent = randomWord;
+
+                const chineseTranslation = await fetchTranslation(randomWord);
+                chineseTranslationElement.textContent = `翻譯: ${chineseTranslation}`;
+
+                const details = await fetchWordDetails(randomWord);
+                if (details) {
+                    partOfSpeechElement.textContent = `詞性: ${details.partOfSpeech}`;
+                    phoneticsElement.textContent = `音標: ${details.phonetics}`;
+                    //definitionElement.textContent = `定義: ${details.definition}`;
+                    exampleSentenceElement.textContent = `例句: ${details.exampleSentence}`;
+                }
+                /* USE API END */
+
+                /* USE vocab.js BEGIN */
+                /* 如果 vocabList 已經被加載，從中選擇一個單詞顯示 */
+                // if (typeof vocabList !== 'undefined') {
+                //     const randomVocab = vocabList[Math.floor(Math.random() * vocabList.length)];
+                //     englishWordElement.textContent = randomVocab.english;
+                //     chineseTranslationElement.textContent = `翻譯: ${randomVocab.chinese}`;
+                //     partOfSpeechElement.textContent = `詞性: ${randomVocab.partOfSpeech}`;
+                //     phoneticsElement.textContent = `音標: ${randomVocab.phonetics}`;
+                //     exampleSentenceElement.textContent = `例句: ${randomVocab.example}`;
+                /* USE vocab.js END */
+            } catch (error) {
+                console.error('Error loading vocabulary:', error);
+                document.getElementById('english-word').textContent = 'Error loading vocabulary';
+            }
+        }
+
+        function clearTextContent(...elements) {
+            elements.forEach(element => element.textContent = '');
         }
 
         async function fetchRandomWord() {
@@ -375,6 +334,40 @@
                 console.error('Error fetching word details:', error);
                 return null;
             }
+        }
+
+        function setupClickListener() {
+            document.querySelector('.vocab-container').addEventListener('click', async () => {
+                if (document.getElementById('api-key-form').style.display !== 'block') {
+                    const selection = window.getSelection().toString();
+                    if (!selection) {
+                        await updateVocabulary();
+                    }
+                }
+            });
+        }
+
+        function handleTouchEvents() {
+            let startY = 0;
+            let dist = 0;
+
+            document.addEventListener('touchstart', (event) => {
+                startY = event.touches[0].clientY;
+                dist = 0;
+            }, false);
+
+            document.addEventListener('touchmove', (event) => {
+                const currentY = event.touches[0].clientY;
+                dist = currentY - startY;
+            }, false);
+
+            document.addEventListener('touchend', async () => {
+                if (document.getElementById('api-key-form').style.display !== 'block') {
+                    if (dist > 50) { 
+                        await updateVocabulary();
+                    }
+                }
+            }, false);
         }
     </script>
 </body>
