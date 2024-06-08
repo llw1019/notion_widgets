@@ -36,6 +36,26 @@
             margin: 5px 0;
             text-align: left;
         }
+        #api-key-form {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+        #api-key-input {
+            font-size: 16px;
+            padding: 8px;
+            width: 80%;
+            margin-bottom: 10px;
+        }
+        #api-key-button {
+            font-size: 16px;
+            padding: 8px 16px;
+        }
+        #api-key-error {
+            text-align: center;
+            color: red;
+            display: none;
+        }
 
         @media (prefers-color-scheme: dark) {
             body {
@@ -56,6 +76,11 @@
         <p id="phonetics"></p>
         <p id="definition"></p>
         <p id="example-sentence"></p>
+        <div id="api-key-form">
+            <input type="text" id="api-key-input" placeholder="請輸入您的 API Key">
+            <button id="api-key-button">保存 API Key</button>
+            <p id="api-key-error">無效的 API Key</p>
+        </div>
     </div>
 
     <!-- 引用外部的 vocab.js 文件 -->
@@ -135,11 +160,13 @@
 
             /* 監聽點擊事件 */
             document.querySelector('.vocab-container').addEventListener('click', async () => {
-                /* 檢查是否有選取的文字 */
-                const selection = window.getSelection().toString();
-                if (!selection) {
-                    /* 如果沒有選取的文字，觸發更新操作 */
-                    updateVocabulary();
+                if (document.getElementById('api-key-form').style.display !== 'block') {
+                    /* 檢查是否有選取的文字 */
+                    const selection = window.getSelection().toString();
+                    if (!selection) {
+                        /* 如果沒有選取的文字，觸發更新操作 */
+                        updateVocabulary();
+                    }
                 }
             });
 
@@ -161,9 +188,11 @@
             }
 
             document.addEventListener('touchend', function () {
-                if (dist > 50) { /* 如果移動距離大於50px，認為是下拉操作 */
-                    /* 觸發更新操作 */
-                    updateVocabulary();
+                if (document.getElementById('api-key-form').style.display !== 'block') {
+                    if (dist > 50) { /* 如果移動距離大於50px，認為是下拉操作 */
+                        /* 觸發更新操作 */
+                        updateVocabulary();
+                    }
                 }
             }, false);
         });
@@ -171,12 +200,79 @@
         async function checkAndSetApiKey() {
             let apiKey = localStorage.getItem('Groq_apiKey');
             if (!apiKey) {
-                apiKey = prompt("請輸入您的 API Key:");
+                await showApiKeyForm();
+            } else {
+                document.getElementById('api-key-form').style.display = 'none';
+            }
+        }
+
+        async function showApiKeyForm() {
+            document.getElementById('api-key-input').disabled = false;
+            document.getElementById('api-key-button').disabled = false;
+            document.getElementById('api-key-form').style.display = 'block';
+            document.getElementById('api-key-button').addEventListener('click', async () => {
+                const apiKey = document.getElementById('api-key-input').value;
                 if (apiKey) {
-                    localStorage.setItem('Groq_apiKey', apiKey);
+                    document.getElementById('api-key-error').style.display = 'none';
+                    document.getElementById('api-key-input').disabled = true;
+                    document.getElementById('api-key-button').disabled = true;
+                    const isValid = await validateApiKey(apiKey);
+                    if (isValid) {
+                        localStorage.setItem('Groq_apiKey', apiKey);
+                        document.getElementById('api-key-form').style.display = 'none';
+                        document.getElementById('api-key-error').style.display = 'none';
+                        updateVocabulary();
+                    } else {
+                        document.getElementById('api-key-error').style.display = 'block';
+                        document.getElementById('api-key-input').disabled = false;
+                        document.getElementById('api-key-button').disabled = false;
+
+                    }
                 } else {
-                    alert("您必須提供 API Key 才能使用此應用程式。");
+                    document.getElementById('api-key-error').style.display = 'block';
                 }
+            });
+        }
+
+        async function validateApiKey(apiKey) {
+            try {
+                const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({
+                        "messages": [
+                            {
+                                "role": "user",
+                                "content": "Reply an 'ok'"
+                            },
+                            {
+                                "role": "assistant",
+                                "content": "ok"
+                            }
+                        ],
+                        "model": "llama3-8b-8192",
+                        "temperature": 0,
+                        "max_tokens": 1,
+                        "top_p": 1,
+                        "stream": false
+                    })
+                });
+
+                if (response.ok) {
+                    return true;
+                } else {
+                    const errorData = await response.json();
+                    if (errorData.error && errorData.error.code === 'invalid_api_key') {
+                        return false;
+                    }
+                    throw new Error(errorData.error.message);
+                }
+            } catch (error) {
+                console.error('API Key validation error:', error);
+                return false;
             }
         }
 
@@ -236,10 +332,10 @@
                 if (!response.ok) {
                     const errorData = await response.json();
                     if (errorData.error && errorData.error.code === 'invalid_api_key') {
-                        alert("無效的 API Key，請重新輸入。");
                         localStorage.removeItem('Groq_apiKey');
-                        await checkAndSetApiKey();
-                        return fetchWordDetails(word);
+                        document.getElementById('api-key-error').style.display = 'block';
+                        await showApiKeyForm();
+                        return null;
                     }
                     throw new Error(errorData.error.message);
                 }
