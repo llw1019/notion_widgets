@@ -1,5 +1,4 @@
-// words.js
-const words = [
+[
   "abandon",
   "abbreviation",
   "abnormal",
@@ -3274,4 +3273,4 @@ const words = [
   "yawn",
   "yield",
   "zigzag"
-];
+]
