@@ -36,6 +36,16 @@
             margin: 5px 0;
             text-align: left;
         }
+        .vocab-container input {
+            font-size: 24px;
+            margin-bottom: 10px;
+            padding: 5px;
+            text-align: center;
+            background-color: #f0f0f0;
+            border: 1px solid #f0f0f0;
+            color: inherit;
+            border-radius: 4px;
+        }
         #api-key-form {
             display: none;
             text-align: center;
@@ -65,12 +75,17 @@
                 background-color: #333;
                 color: white;
             }
+            .vocab-container input {
+                background-color: #333;
+                border: 1px solid #333;
+                color: white;
+            }
         }
     </style>
 </head>
 <body>
     <div class="vocab-container">
-        <h1 id="english-word">Loading...</h1>
+        <input type="text" id="english-word-input" placeholder="Enter a word">
         <p id="chinese-translation"></p>
         <p id="part-of-speech"></p>
         <p id="phonetics"></p>
@@ -90,7 +105,7 @@
             await checkAndSetApiKey();
 
             /* 初始化單詞和相關信息 */
-            updateVocabulary();
+            await fetchAndUpdateVocabulary();
 
             /* 監聽點擊事件 */
             setupClickListener();
@@ -100,6 +115,14 @@
 
             /* 監聽 API Key 保存按鈕點擊事件 */
             document.getElementById('api-key-button').addEventListener('click', handleApiKeySave);
+
+            /* 監聽 Enter 鍵按下事件 */
+            document.getElementById('english-word-input').addEventListener('keyup', async (event) => {
+                if (event.key === 'Enter') {
+                    const word = event.target.value;
+                    await fetchAndUpdateVocabulary(word);
+                }
+            });
         });
 
         function setThemeFromLocalStorage() {
@@ -122,6 +145,7 @@
         }
 
         function showApiKeyForm() {
+            document.getElementById('english-word-input').disabled = true;
             document.getElementById('api-key-form').style.display = 'block';
             document.getElementById('api-key-error').style.display = 'none';
             document.getElementById('api-key-input').disabled = false;
@@ -141,8 +165,9 @@
                 const isValid = await validateApiKey(apiKey);
                 if (isValid) {
                     localStorage.setItem('Groq_apiKey', apiKey);
+                    document.getElementById('english-word-input').disabled = false;
                     document.getElementById('api-key-form').style.display = 'none';
-                    updateVocabulary();
+                    fetchAndUpdateVocabulary();
                 } else {
                     enableApiKeyInput(apiKeyInput, apiKeyButton);
                     apiKeyError.style.display = 'block';
@@ -204,9 +229,9 @@
             }
         }
 
-        async function updateVocabulary() {
+        async function fetchAndUpdateVocabulary(word = null) {
             try {
-                const englishWordElement = document.getElementById('english-word');
+                const englishWordElement = document.getElementById('english-word-input');
                 const chineseTranslationElement = document.getElementById('chinese-translation');
                 const partOfSpeechElement = document.getElementById('part-of-speech');
                 const phoneticsElement = document.getElementById('phonetics');
@@ -224,13 +249,15 @@
 
                 /* 更新單詞和相關信息 */
                 /* USE API BEGIN */
-                const randomWord = await fetchRandomWord();
-                englishWordElement.textContent = randomWord;
+                if (!word) {
+                    word = await fetchRandomWord();
+                    englishWordElement.value = word;
+                }
 
-                const chineseTranslation = await fetchTranslation(randomWord);
+                const chineseTranslation = await fetchTranslation(word);
                 chineseTranslationElement.textContent = `翻譯: ${chineseTranslation}`;
 
-                const details = await fetchWordDetails(randomWord);
+                const details = await fetchWordDetails(word);
                 if (details) {
                     partOfSpeechElement.textContent = `詞性: ${details.partOfSpeech}`;
                     phoneticsElement.textContent = `音標: ${details.phonetics}`;
@@ -248,7 +275,7 @@
                 // const vocabList = await response.json();
                 // const randomVocab = vocabList[Math.floor(Math.random() * vocabList.length)];
 
-                // englishWordElement.textContent = randomVocab.english;
+                // englishWordElement.value = randomVocab.english;
                 // chineseTranslationElement.textContent = `翻譯: ${randomVocab.chinese}`;
                 // partOfSpeechElement.textContent = `詞性: ${randomVocab.partOfSpeech}`;
                 // phoneticsElement.textContent = `音標: ${randomVocab.phonetics}`;
@@ -256,7 +283,7 @@
                 /* USE vocab.json END */
             } catch (error) {
                 console.error('Error loading vocabulary:', error);
-                document.getElementById('english-word').textContent = 'Error loading vocabulary';
+                document.getElementById('english-word-input').value = 'Error loading vocabulary';
             }
         }
 
@@ -347,11 +374,15 @@
         }
 
         function setupClickListener() {
-            document.querySelector('.vocab-container').addEventListener('click', async () => {
+            document.querySelector('.vocab-container').addEventListener('click', async (event) => {
+                // 檢查點擊的目標元素是否為 english-word-input 輸入框
+                if (event.target.id === 'english-word-input') {
+                    return; // 如果是，則不執行任何操作
+                }
                 if (document.getElementById('api-key-form').style.display !== 'block') {
                     const selection = window.getSelection().toString();
                     if (!selection) {
-                        await updateVocabulary();
+                        await fetchAndUpdateVocabulary();
                     }
                 }
             });
@@ -374,7 +405,7 @@
             document.addEventListener('touchend', async () => {
                 if (document.getElementById('api-key-form').style.display !== 'block') {
                     if (dist > 50) { 
-                        await updateVocabulary();
+                        await fetchAndUpdateVocabulary();
                     }
                 }
             }, false);
