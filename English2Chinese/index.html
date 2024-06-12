@@ -382,10 +382,21 @@
         }
 
         function setupClickListener() {
-            document.querySelector('.vocab-container').addEventListener('click', async (event) => {
-                // 檢查點擊的目標元素是否為 english-word-input 輸入框
+            let clickStartTime = 0;
+            const vocabContainer = document.querySelector('.vocab-container');
+
+            vocabContainer.addEventListener('mousedown', (event) => {
+                clickStartTime  = event.timeStamp; /* 記錄滑鼠按下的時間戳 */
+            });
+
+            vocabContainer.addEventListener('mouseup', async (event) => {
+                const clickDuration = event.timeStamp - clickStartTime;
+                if (clickDuration > 500) {
+                    return; /* 超過500ms，取消操作 */
+                }
+                /* 檢查點擊的目標元素是否為 english-word-input 輸入框 */
                 if (event.target.id === 'english-word-input') {
-                    return; // 如果是，則不執行任何操作
+                    return; /* 如果是，則不執行任何操作 */
                 }
                 if (document.getElementById('api-key-form').style.display !== 'block') {
                     const selection = window.getSelection().toString();
