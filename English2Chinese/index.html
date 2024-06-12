@@ -131,9 +131,15 @@
             const theme = localStorage.getItem('mode');
             if (theme) {
                 document.body.style.backgroundColor = theme === 'dark' ? 'rgb(25, 25, 25)' : 'white';
+
                 const vocabContainer = document.querySelector('.vocab-container');
                 vocabContainer.style.backgroundColor = theme === 'dark' ? '#333' : '#f0f0f0';
                 vocabContainer.style.color = theme === 'dark' ? 'white' : 'black';
+
+                const wordInput = document.querySelector('.vocab-container input');
+                wordInput.style.backgroundColor = theme === 'dark' ? '#333' : '#f0f0f0';
+                wordInput.style.borderColor = theme === 'dark' ? '#333' : '#f0f0f0';
+                wordInput.style.color = theme === 'dark' ? 'white' : 'black';
             }
         }
 
