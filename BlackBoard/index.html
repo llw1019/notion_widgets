@@ -23,6 +23,9 @@
       cursor: crosshair;
     }
     .controls {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
       margin: 10px;
     }
     .button {
@@ -38,11 +41,60 @@
     .button:hover {
       background-color: #777;
     }
+    .slider-container {
+      display: flex;
+      align-items: center;
+      margin: 10px;
+    }
+    .slider-container label {
+      margin-right: 10px;
+    }
+    .slider {
+      -webkit-appearance: none;
+      width: 200px;
+      height: 8px;
+      background: #444;
+      border-radius: 4px;
+      outline: none;
+      transition: background 0.3s;
+      cursor: pointer;
+    }
+    .slider:hover {
+      background: #555;
+    }
+    .slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      background: #999;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .slider::-webkit-slider-thumb:hover {
+      background: #bbb;
+    }
+    .slider::-moz-range-thumb {
+      width: 16px;
+      height: 16px;
+      background: #999;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .slider::-moz-range-thumb:hover {
+      background: #bbb;
+    }
   </style>
 </head>
 <body>
   <div class="controls">
     <button class="button" id="toggleButton">Switch to Eraser</button>
+    <div class="slider-container">
+      <label for="thickness">Thickness:</label>
+      <input type="range" id="thickness" class="slider" min="1" max="50" value="5">
+    </div>
   </div>
   <canvas id="chalkboard" width="800" height="600"></canvas>
 
@@ -50,21 +102,23 @@
     const canvas = document.getElementById('chalkboard');
     const ctx = canvas.getContext('2d');
     const toggleButton = document.getElementById('toggleButton');
+    const thicknessSlider = document.getElementById('thickness');
     let drawing = false;
     let isChalk = true;
+    let thickness = 5;
 
-    // Initialize chalk style
+    // Set chalk style
     const setChalkStyle = () => {
-      ctx.lineWidth = 5;
+      ctx.lineWidth = thickness;
       ctx.lineJoin = 'round';
       ctx.lineCap = 'round';
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
       toggleButton.textContent = 'Switch to Eraser';
     };
 
-    // Initialize eraser style
+    // Set eraser style
     const setEraserStyle = () => {
-      ctx.lineWidth = 20;
+      ctx.lineWidth = thickness;
       ctx.lineJoin = 'round';
       ctx.lineCap = 'round';
       ctx.strokeStyle = '#333';
@@ -123,6 +177,16 @@
         img.onload = () => ctx.drawImage(img, 0, 0);
       }
     };
+
+    // Update thickness based on slider
+    thicknessSlider.addEventListener('input', (e) => {
+      thickness = e.target.value;
+      if (isChalk) {
+        setChalkStyle();
+      } else {
+        setEraserStyle();
+      }
+    });
 
     // Toggle between chalk and eraser
     toggleButton.addEventListener('click', () => {
