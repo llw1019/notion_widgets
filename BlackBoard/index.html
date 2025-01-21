@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chalkboard Drawing</title>
+  <style>
+    body {
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #2e2e2e;
+    }
+    canvas {
+      background-color: #333;
+      border: 2px solid #222;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+      cursor: crosshair;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="chalkboard" width="800" height="600"></canvas>
+
+  <script>
+    const canvas = document.getElementById('chalkboard');
+    const ctx = canvas.getContext('2d');
+    let drawing = false;
+
+    // Setup chalk style
+    ctx.lineWidth = 5;
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)'; // Chalk white with slight transparency
+
+    // Helper function to start drawing
+    const startDrawing = (e) => {
+      drawing = true;
+      draw(e);
+    };
+
+    // Helper function to stop drawing
+    const stopDrawing = () => {
+      drawing = false;
+      ctx.beginPath(); // Reset path for smooth strokes
+    };
+
+    // Draw function
+    const draw = (e) => {
+      if (!drawing) return;
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+
+      ctx.lineTo(x, y);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+    };
+
+    // Event listeners
+    canvas.addEventListener('mousedown', startDrawing);
+    canvas.addEventListener('mouseup', stopDrawing);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseleave', stopDrawing);
+  </script>
+</body>
+</html>
