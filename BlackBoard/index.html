@@ -105,23 +105,26 @@
     const thicknessSlider = document.getElementById('thickness');
     let drawing = false;
     let isChalk = true;
-    let thickness = 5;
+    let chalkThickness = 5;
+    let eraserThickness = 20;
 
     // Set chalk style
     const setChalkStyle = () => {
-      ctx.lineWidth = thickness;
+      ctx.lineWidth = chalkThickness;
       ctx.lineJoin = 'round';
       ctx.lineCap = 'round';
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+      thicknessSlider.value = chalkThickness;
       toggleButton.textContent = 'Switch to Eraser';
     };
 
     // Set eraser style
     const setEraserStyle = () => {
-      ctx.lineWidth = thickness;
+      ctx.lineWidth = eraserThickness;
       ctx.lineJoin = 'round';
       ctx.lineCap = 'round';
       ctx.strokeStyle = '#333';
+      thicknessSlider.value = eraserThickness;
       toggleButton.textContent = 'Switch to Chalk';
     };
 
@@ -180,12 +183,13 @@
 
     // Update thickness based on slider
     thicknessSlider.addEventListener('input', (e) => {
-      thickness = e.target.value;
+      const value = e.target.value;
       if (isChalk) {
-        setChalkStyle();
+        chalkThickness = value;
       } else {
-        setEraserStyle();
+        eraserThickness = value;
       }
+      ctx.lineWidth = value;
     });
 
     // Toggle between chalk and eraser
