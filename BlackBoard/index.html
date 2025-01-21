@@ -12,89 +12,116 @@
       align-items: center;
       justify-content: center;
       height: 100vh;
-      background-color: #2e2e2e;
-      color: white;
       font-family: Arial, sans-serif;
     }
+
     canvas {
       background-color: #333;
       border: 2px solid #222;
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
       cursor: crosshair;
     }
+
     .controls {
       display: flex;
-      flex-direction: column;
+      justify-content: space-between;
       align-items: center;
+      width: 100%;
+      max-width: 800px;
       margin: 10px;
     }
+
+    .left-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
     .button {
       padding: 10px 20px;
-      margin: 5px;
-      background-color: #555;
-      color: white;
       border: none;
       cursor: pointer;
       border-radius: 4px;
       transition: background-color 0.3s;
+      background-color: #555;
+      color: white;
     }
+
     .button:hover {
       background-color: #777;
     }
-    .slider-container {
-      display: flex;
-      align-items: center;
-      margin: 10px;
+
+    .fixed-width {
+      width: 150px;
     }
-    .slider-container label {
-      margin-right: 10px;
-    }
+
     .slider {
       -webkit-appearance: none;
       width: 200px;
       height: 8px;
-      background: #444;
       border-radius: 4px;
       outline: none;
-      transition: background 0.3s;
       cursor: pointer;
-    }
-    .slider:hover {
       background: #555;
     }
+
     .slider::-webkit-slider-thumb {
       -webkit-appearance: none;
-      appearance: none;
-      width: 16px;
-      height: 16px;
-      background: #999;
+      width: 20px;
+      height: 20px;
       border-radius: 50%;
+      background: white;
       cursor: pointer;
-      transition: background 0.3s;
     }
-    .slider::-webkit-slider-thumb:hover {
-      background: #bbb;
+
+    @media (prefers-color-scheme: dark) {
+      body {
+        background-color: rgb(25, 25, 25);
+        color: white;
+      }
+
+      .button {
+        background-color: #555;
+        color: white;
+      }
+
+      .slider {
+        background: #555;
+      }
+
+      .slider::-webkit-slider-thumb {
+        background: white;
+      }
     }
-    .slider::-moz-range-thumb {
-      width: 16px;
-      height: 16px;
-      background: #999;
-      border-radius: 50%;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
-    .slider::-moz-range-thumb:hover {
-      background: #bbb;
+
+    @media (prefers-color-scheme: light) {
+      body {
+        background-color: #ffffff; /* Full white background in light mode */
+        color: black;
+      }
+
+      .button {
+        background-color: #ccc;
+        color: black;
+      }
+
+      .slider {
+        background: #ccc;
+      }
+
+      .slider::-webkit-slider-thumb {
+        background: black;
+      }
     }
   </style>
 </head>
 <body>
   <div class="controls">
-    <button class="button" id="toggleButton">Switch to Eraser</button>
-    <div class="slider-container">
-      <label for="thickness">Thickness:</label>
+    <div class="left-controls">
+      <button class="button fixed-width" id="toggleButton">Switch to Eraser</button>
       <input type="range" id="thickness" class="slider" min="1" max="50" value="5">
     </div>
+    <button class="button" id="clearButton">Clear Board</button>
   </div>
   <canvas id="chalkboard" width="800" height="600"></canvas>
 
@@ -103,45 +130,45 @@
     const ctx = canvas.getContext('2d');
     const toggleButton = document.getElementById('toggleButton');
     const thicknessSlider = document.getElementById('thickness');
+    const clearButton = document.getElementById('clearButton');
     let drawing = false;
     let isChalk = true;
     let chalkThickness = 5;
     let eraserThickness = 20;
 
-    // Set chalk style
+    // Apply chalk style
     const setChalkStyle = () => {
       ctx.lineWidth = chalkThickness;
       ctx.lineJoin = 'round';
       ctx.lineCap = 'round';
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
-      thicknessSlider.value = chalkThickness;
-      toggleButton.textContent = 'Switch to Eraser';
+      ctx.strokeStyle = 'rgba(255, 255, 255, 1)';
     };
 
-    // Set eraser style
+    // Apply eraser style
     const setEraserStyle = () => {
       ctx.lineWidth = eraserThickness;
       ctx.lineJoin = 'round';
       ctx.lineCap = 'round';
       ctx.strokeStyle = '#333';
-      thicknessSlider.value = eraserThickness;
-      toggleButton.textContent = 'Switch to Chalk';
     };
 
     // Start drawing
     const startDrawing = (e) => {
       drawing = true;
-      draw(e);
+      ctx.beginPath();
+      const rect = canvas.getBoundingClientRect();
+      ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+      ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+      ctx.stroke();
     };
 
     // Stop drawing
     const stopDrawing = () => {
       drawing = false;
       ctx.beginPath();
-      saveToLocalStorage();
     };
 
-    // Drawing logic
+    // Draw on canvas
     const draw = (e) => {
       if (!drawing) return;
 
@@ -149,39 +176,18 @@
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
 
-      if (isChalk) {
-        // Add chalk effect
-        for (let i = 0; i < 5; i++) {
-          const offsetX = Math.random() * 4 - 2;
-          const offsetY = Math.random() * 4 - 2;
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-          ctx.fillRect(x + offsetX, y + offsetY, 1, 1);
-        }
-      }
-
       ctx.lineTo(x, y);
       ctx.stroke();
-      ctx.beginPath();
       ctx.moveTo(x, y);
     };
 
-    // Save canvas to Local Storage
-    const saveToLocalStorage = () => {
-      const dataURL = canvas.toDataURL();
-      localStorage.setItem('chalkboard', dataURL);
+    // Clear canvas
+    const clearCanvas = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      localStorage.removeItem('chalkboardData'); // Clear from storage
     };
 
-    // Load canvas from Local Storage
-    const loadFromLocalStorage = () => {
-      const dataURL = localStorage.getItem('chalkboard');
-      if (dataURL) {
-        const img = new Image();
-        img.src = dataURL;
-        img.onload = () => ctx.drawImage(img, 0, 0);
-      }
-    };
-
-    // Update thickness based on slider
+    // Handle thickness slider change
     thicknessSlider.addEventListener('input', (e) => {
       const value = e.target.value;
       if (isChalk) {
@@ -189,7 +195,7 @@
       } else {
         eraserThickness = value;
       }
-      ctx.lineWidth = value;
+      ctx.lineWidth = isChalk ? chalkThickness : eraserThickness;
     });
 
     // Toggle between chalk and eraser
@@ -197,20 +203,48 @@
       isChalk = !isChalk;
       if (isChalk) {
         setChalkStyle();
+        toggleButton.textContent = 'Switch to Eraser';
+        thicknessSlider.value = chalkThickness;
       } else {
         setEraserStyle();
+        toggleButton.textContent = 'Switch to Chalk';
+        thicknessSlider.value = eraserThickness;
       }
     });
 
-    // Event listeners
+    clearButton.addEventListener('click', clearCanvas);
+
     canvas.addEventListener('mousedown', startDrawing);
     canvas.addEventListener('mouseup', stopDrawing);
     canvas.addEventListener('mousemove', draw);
     canvas.addEventListener('mouseleave', stopDrawing);
 
-    // Initial setup
+    // Initialize with chalk style
     setChalkStyle();
-    loadFromLocalStorage();
+    thicknessSlider.value = chalkThickness;
+
+    // Load saved drawing from localStorage
+    const loadDrawing = () => {
+      const savedData = localStorage.getItem('chalkboardData');
+      if (savedData) {
+        const img = new Image();
+        img.src = savedData;
+        img.onload = () => {
+          ctx.drawImage(img, 0, 0);
+        };
+      }
+    };
+
+    // Save current drawing to localStorage
+    const saveDrawing = () => {
+      const data = canvas.toDataURL();
+      localStorage.setItem('chalkboardData', data);
+    };
+
+    // Auto-save drawing every second
+    setInterval(saveDrawing, 1000);
+
+    loadDrawing();
   </script>
 </body>
 </html>
