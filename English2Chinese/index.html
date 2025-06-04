@@ -17,58 +17,61 @@
             transition: background-color 0.3s;
         }
         .vocab-container {
-            text-align: center;
-            background-color: #f0f0f0;
-            padding: 20px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: left;
+            background-color: #f9f9f9;
+            padding: 15px;
             border-radius: 8px;
-            max-width: 90%;
+            max-width: 600px;
             max-height: 90%;
             overflow: auto;
-            transition: background-color 0.3s, color 0.3s;
-        }
-        .vocab-container h1 {
-            font-size: 24px;
-            margin-bottom: 10px;
-        }
-        .vocab-container p {
-            font-size: 18px;
-            margin: 5px 0;
-            text-align: left;
+            color: #333;
         }
         .vocab-container input {
-            font-size: 24px;
+            font-size: 18px;
             margin-bottom: 10px;
             padding: 5px;
             text-align: center;
-            width: 80%;
+            width: 100%;
             box-sizing: border-box;
             background-color: #f0f0f0;
-            border: 1px solid #f0f0f0;
+            border: 1px solid #ccc;
             color: inherit;
             border-radius: 4px;
         }
         #api-key-form {
             display: none;
             text-align: center;
-            margin-top: 20px;
+            margin-top: 15px;
         }
-        #api-key-input {
+        .translation-block {
+            margin-bottom: 8px;
+            padding: 5px 0;
+            border-bottom: 1px solid #ddd;
+        }
+        .translation-block:last-child {
+            border-bottom: none;
+        }
+        .translation-block .pos {
             font-size: 16px;
-            padding: 8px;
-            width: 80%;
-            margin-bottom: 10px;
+            color: #555;
+            font-weight: bold;
+            margin-bottom: 2px;
         }
-        #api-key-button {
-            font-size: 16px;
-            padding: 8px 16px;
+        .translation-block .translation {
+            margin: 2px 0;
+            color: #333;
         }
-        #api-key-error {
-            text-align: center;
-            color: red;
-            display: none;
+        .translation-block .definition {
+            margin: 2px 0;
+            font-style: italic;
+            color: #666;
+            font-size: 14px;
         }
-
+        .translation-block .example {
+            margin: 2px 0;
+            color: #777;
+            font-size: 14px;
+        }
         @media (prefers-color-scheme: dark) {
             body {
                 background-color: rgb(25, 25, 25);
@@ -77,9 +80,24 @@
                 background-color: #333;
                 color: white;
             }
+            .translation-block {
+                border-bottom: 1px solid #555;
+            }
+            .translation-block .pos {
+                color: #bbb;
+            }
+            .translation-block .translation {
+                color: #ddd;
+            }
+            .translation-block .definition {
+                color: #aaa;
+            }
+            .translation-block .example {
+                color: #888;
+            }
             .vocab-container input {
-                background-color: #333;
-                border: 1px solid #333;
+                background-color: #444;
+                border: 1px solid #555;
                 color: white;
             }
         }
@@ -89,14 +107,10 @@
     <div class="vocab-container">
         <input type="text" id="english-word-input" placeholder="Enter a word">
         <p id="chinese-translation"></p>
-        <p id="part-of-speech"></p>
-        <p id="phonetics"></p>
-        <p id="definition"></p>
-        <p id="example-sentence"></p>
         <div id="api-key-form">
             <input type="text" id="api-key-input" placeholder="請輸入您的 API Key">
             <button id="api-key-button">保存 API Key</button>
-            <p id="api-key-error">無效的 API Key</p>
+            <p id="api-key-error" style="color: red; display: none;">無效的 API Key</p>
         </div>
     </div>
 
@@ -104,21 +118,16 @@
         document.addEventListener('DOMContentLoaded', async () => {
             setThemeFromLocalStorage();
 
-            await checkAndSetApiKey();
+            try {
+                await checkAndSetApiKey(); // 檢查並設置 API Key
+            } catch (error) {
+                console.error('Error during API Key check:', error);
+            }
 
-            /* 初始化單詞和相關信息 */
-            await fetchAndUpdateVocabulary();
-
-            /* 監聽點擊事件 */
             setupClickListener();
-
-            /* 監聽觸摸事件 */
             handleTouchEvents();
 
-            /* 監聽 API Key 保存按鈕點擊事件 */
             document.getElementById('api-key-button').addEventListener('click', handleApiKeySave);
-
-            /* 監聽 Enter 鍵按下事件 */
             document.getElementById('english-word-input').addEventListener('keyup', async (event) => {
                 if (event.key === 'Enter') {
                     const word = event.target.value;
@@ -129,26 +138,45 @@
 
         function setThemeFromLocalStorage() {
             const theme = localStorage.getItem('mode');
-            if (theme) {
-                document.body.style.backgroundColor = theme === 'dark' ? 'rgb(25, 25, 25)' : 'white';
+            const isDarkMode = theme === 'dark';
 
-                const vocabContainer = document.querySelector('.vocab-container');
-                vocabContainer.style.backgroundColor = theme === 'dark' ? '#333' : '#f0f0f0';
-                vocabContainer.style.color = theme === 'dark' ? 'white' : 'black';
+            document.body.style.backgroundColor = isDarkMode ? 'rgb(25, 25, 25)' : 'white';
 
-                const wordInput = document.querySelector('.vocab-container input');
-                wordInput.style.backgroundColor = theme === 'dark' ? '#333' : '#f0f0f0';
-                wordInput.style.borderColor = theme === 'dark' ? '#333' : '#f0f0f0';
-                wordInput.style.color = theme === 'dark' ? 'white' : 'black';
-            }
+            const vocabContainer = document.querySelector('.vocab-container');
+            vocabContainer.style.backgroundColor = isDarkMode ? '#333' : '#f0f0f0';
+            vocabContainer.style.color = isDarkMode ? 'white' : 'black';
+
+            const wordInput = document.querySelector('.vocab-container input');
+            wordInput.style.backgroundColor = isDarkMode ? '#333' : '#f0f0f0';
+            wordInput.style.borderColor = isDarkMode ? '#555' : '#ccc';
+            wordInput.style.color = isDarkMode ? 'white' : 'black';
+
+            const translationBlocks = document.querySelectorAll('.translation-block');
+            translationBlocks.forEach(block => {
+                block.style.borderBottomColor = isDarkMode ? '#555' : '#ddd';
+
+                const pos = block.querySelector('.pos');
+                const translation = block.querySelector('.translation');
+                const definition = block.querySelector('.definition');
+                const example = block.querySelector('.example');
+
+                if (pos) pos.style.color = isDarkMode ? '#bbb' : '#555';
+                if (translation) translation.style.color = isDarkMode ? '#ddd' : '#333';
+                if (definition) definition.style.color = isDarkMode ? '#aaa' : '#666';
+                if (example) example.style.color = isDarkMode ? '#888' : '#777';
+            });
         }
 
         async function checkAndSetApiKey() {
-            const apiKey = localStorage.getItem('Gemini_apiKey');
-            if (!apiKey) {
-                showApiKeyForm();
-            } else {
-                document.getElementById('api-key-form').style.display = 'none';
+            getApiKey();
+
+            document.getElementById('api-key-form').style.display = 'none';
+            document.getElementById('english-word-input').disabled = false;
+
+            try {
+                await fetchAndUpdateVocabulary(); // 如果有 API Key，執行更新
+            } catch (error) {
+                console.error('Error during vocabulary update:', error);
             }
         }
 
@@ -156,81 +184,43 @@
             document.getElementById('english-word-input').disabled = true;
             document.getElementById('api-key-form').style.display = 'block';
             document.getElementById('api-key-error').style.display = 'none';
-            document.getElementById('api-key-input').disabled = false;
-            document.getElementById('api-key-button').disabled = false;
         }
 
         async function handleApiKeySave() {
             const apiKeyInput = document.getElementById('api-key-input');
-            const apiKeyButton = document.getElementById('api-key-button');
-            const apiKeyError = document.getElementById('api-key-error');
             const apiKey = apiKeyInput.value;
 
             if (apiKey) {
-                disableApiKeyInput(apiKeyInput, apiKeyButton);
-                apiKeyError.style.display = 'none';
-
                 const isValid = await validateApiKey(apiKey);
                 if (isValid) {
                     localStorage.setItem('Gemini_apiKey', apiKey);
                     document.getElementById('english-word-input').disabled = false;
                     document.getElementById('api-key-form').style.display = 'none';
-                    fetchAndUpdateVocabulary();
+                    await fetchAndUpdateVocabulary();
                 } else {
-                    enableApiKeyInput(apiKeyInput, apiKeyButton);
-                    apiKeyError.style.display = 'block';
+                    document.getElementById('api-key-error').style.display = 'block';
                 }
             } else {
-                apiKeyError.style.display = 'block';
+                document.getElementById('api-key-error').style.display = 'block';
             }
-        }
-
-        function disableApiKeyInput(input, button) {
-            input.disabled = true;
-            button.disabled = true;
-        }
-
-        function enableApiKeyInput(input, button) {
-            input.disabled = false;
-            button.disabled = false;
         }
 
         async function validateApiKey(apiKey) {
             try {
-                const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${apiKey}`
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        "messages": [
-                            {
-                                "role": "user",
-                                "content": "Reply an 'ok'"
-                            },
-                            {
-                                "role": "assistant",
-                                "content": "ok"
-                            }
-                        ],
-                        "model": "llama-3.3-70b-versatile",
-                        "temperature": 0,
-                        "max_tokens": 1,
-                        "top_p": 1,
-                        "stream": false
+                        "contents": [{ "parts": [{ "text": "Reply an 'ok'" }] }]
                     })
                 });
 
-                if (response.ok) {
-                    return true;
-                } else {
-                    const errorData = await response.json();
-                    if (errorData.error && errorData.error.code === 'invalid_api_key') {
-                        return false;
-                    }
-                    throw new Error(errorData.error.message);
-                }
+                if (response.ok) return true;
+
+                const errorData = await response.json();
+                if (errorData.error?.code === 'invalid_api_key') return false;
+
+                throw new Error(errorData.error?.message || 'Unknown error');
             } catch (error) {
                 console.error('API Key validation error:', error);
                 return false;
@@ -239,64 +229,53 @@
 
         async function fetchAndUpdateVocabulary(word = null) {
             try {
+                const apiKey = getApiKey();
                 const englishWordElement = document.getElementById('english-word-input');
                 const chineseTranslationElement = document.getElementById('chinese-translation');
-                const partOfSpeechElement = document.getElementById('part-of-speech');
-                const phoneticsElement = document.getElementById('phonetics');
-                const definitionElement = document.getElementById('definition');
-                const exampleSentenceElement = document.getElementById('example-sentence');
 
-                clearTextContent(
-                    englishWordElement,
-                    chineseTranslationElement,
-                    partOfSpeechElement,
-                    phoneticsElement,
-                    definitionElement,
-                    exampleSentenceElement
-                );
+                clearTextContent(englishWordElement, chineseTranslationElement);
 
-                /* 更新單詞和相關信息 */
-                /* USE API BEGIN */
                 if (!word) {
                     word = await fetchRandomWord();
                     englishWordElement.value = word;
                 }
 
-                const details = await fetchWordDetails(word);
+                const details = await fetchWordDetails(apiKey, word);
                 if (details) {
-                    englishWordElement.value = details.word;
-
-                    const translations = Object.entries(details.translation)
-                        .map(([pos, value]) => `${pos}: ${value}`)
-                        .join('\n');
-                    chineseTranslationElement.textContent = `翻譯:\n${translations}`;
-
-                    // 顯示詞性
-                    partOfSpeechElement.textContent = `詞性: ${details.partOfSpeech}`;
-
-                    // 顯示每個詞性的詳細資訊
-                    const phonetics = Object.entries(details.phonetics)
-                        .map(([pos, value]) => `${pos}: ${value}`)
-                        .join('\n');
-                    phoneticsElement.textContent = `音標:\n${phonetics}`;
-
-                    const definitions = Object.entries(details.definition)
-                        .map(([pos, value]) => `${pos}: ${value}`)
-                        .join('\n');
-                    definitionElement.textContent = `定義:\n${definitions}`;
-
-                    const examples = Object.entries(details.exampleSentence)
-                        .map(([pos, value]) => `${pos}: ${value}`)
-                        .join('\n');
-                    exampleSentenceElement.textContent = `例句:\n${examples}`;
-                    
+                    updateTranslationUI(details);
+                    setThemeFromLocalStorage();
                 } else {
                     throw new Error('Failed to fetch word details');
                 }
             } catch (error) {
-                console.error('Error loading vocabulary:', error);
-                document.getElementById('english-word-input').value = 'Error loading vocabulary';
+                handleError(error, 'Error loading vocabulary');
             }
+        }
+
+        function updateTranslationUI(details) {
+            const chineseTranslationElement = document.getElementById('chinese-translation');
+            const formattedOutput = Object.keys(details.translation)
+                .map(pos => {
+                    const translation = (details.translation[pos] || '').replace(/\s*\(.*?\)/g, '');
+                    const definition = details.definition[pos] || '';
+                    const example = details.exampleSentence[pos] || '';
+                    return `
+                        <div class="translation-block">
+                            <div class="pos">${pos.toUpperCase()}:</div>
+                            <div class="translation">${translation}</div>
+                            <div class="definition">${definition}</div>
+                            <div class="example">"${example}"</div>
+                        </div>
+                    `.trim();
+                })
+                .join('');
+            chineseTranslationElement.innerHTML = formattedOutput;
+        }
+
+        function handleError(error, fallbackMessage) {
+            console.error(error);
+            document.getElementById('english-word-input').value = fallbackMessage;
+            showApiKeyForm();
         }
 
         function clearTextContent(...elements) {
@@ -306,59 +285,33 @@
         async function fetchRandomWord() {
             const response = await fetch('words.json');
             const words = await response.json();
-            const word = words[Math.floor(Math.random() * words.length)];
-            return word;
+            return words[Math.floor(Math.random() * words.length)];
         }
 
-        async function fetchWordDetails(word) {
-            const apiKey = localStorage.getItem('Gemini_apiKey'); // 從 localStorage 獲取 API Key
-            if (!apiKey) {
-                console.error('Gemini API Key is missing. Please set it in localStorage.');
-                return null;
-            }
-
+        async function fetchWordDetails(apiKey, word) {
             const prompt = `
                 Please provide the following details for the English word "${word}":
-                1. Traditional Chinese translation
+                1. Traditional Chinese translation (繁體中文)
                 2. Part of speech
                 3. KK phonetics
-                4. Definition
-                5. An example sentence
+                4. English definition
+                5. An English example sentence
+                Ensure all translations is in Traditional Chinese (繁體中文).
                 Return the details in the following JSON format:
                 {
                     "word": "<word>",
-                    "translation": {
-                        "<part_of_speech>": "<translation>"
-                    },
-                    "part_of_speech": "<part_of_speech>",
-                    "phonetics": {
-                        "<part_of_speech>": "<phonetics>"
-                    },
-                    "definition": {
-                        "<part_of_speech>": "<definition>"
-                    },
-                    "example_sentence": {
-                        "<part_of_speech>": "<example_sentence>"
-                    }
+                    "translation": { "<part_of_speech>": "<translation>" },
+                    "definition": { "<part_of_speech>": "<definition>" },
+                    "example_sentence": { "<part_of_speech>": "<example_sentence>" }
                 }
             `;
 
             try {
                 const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        "contents": [
-                            {
-                                "parts": [
-                                    {
-                                        "text": prompt
-                                    }
-                                ]
-                            }
-                        ]
+                        "contents": [{ "parts": [{ "text": prompt }] }]
                     })
                 });
 
@@ -369,49 +322,33 @@
 
                 const data = await response.json();
                 const rawContent = data.candidates[0].content.parts[0].text.trim();
-
-                // 解析 JSON 格式的內容
                 const content = JSON.parse(rawContent.replace(/```json|```/g, '').trim());
 
-                // 處理多層次的結構
-                const result = {
+                return {
                     word: content.word || word,
                     translation: content.translation || {},
-                    partOfSpeech: content.part_of_speech || 'N/A',
-                    phonetics: content.phonetics || {},
                     definition: content.definition || {},
                     exampleSentence: content.example_sentence || {}
                 };
-
-                return result;
             } catch (error) {
-                console.error('Error fetching word details with Gemini:', error);
+                console.error('Error fetching word details:', error);
                 return null;
             }
         }
 
         function setupClickListener() {
-            let clickStartTime = 0;
             const vocabContainer = document.querySelector('.vocab-container');
-
             vocabContainer.addEventListener('mousedown', (event) => {
-                clickStartTime  = event.timeStamp; /* 記錄滑鼠按下的時間戳 */
+                this.clickStartTime = event.timeStamp;
             });
 
             vocabContainer.addEventListener('mouseup', async (event) => {
-                const clickDuration = event.timeStamp - clickStartTime;
-                if (clickDuration > 500) {
-                    return; /* 超過500ms，取消操作 */
-                }
-                /* 檢查點擊的目標元素是否為 english-word-input 輸入框 */
-                if (event.target.id === 'english-word-input') {
-                    return; /* 如果是，則不執行任何操作 */
-                }
+                const clickDuration = event.timeStamp - this.clickStartTime;
+                if (clickDuration > 500 || event.target.id === 'english-word-input') return;
+
                 if (document.getElementById('api-key-form').style.display !== 'block') {
                     const selection = window.getSelection().toString();
-                    if (!selection) {
-                        await fetchAndUpdateVocabulary();
-                    }
+                    if (!selection) await fetchAndUpdateVocabulary();
                 }
             });
         }
@@ -423,20 +360,28 @@
             document.addEventListener('touchstart', (event) => {
                 startY = event.touches[0].clientY;
                 dist = 0;
-            }, false);
+            });
 
             document.addEventListener('touchmove', (event) => {
                 const currentY = event.touches[0].clientY;
                 dist = currentY - startY;
-            }, false);
+            });
 
             document.addEventListener('touchend', async () => {
-                if (document.getElementById('api-key-form').style.display !== 'block') {
-                    if (dist > 50) { 
-                        await fetchAndUpdateVocabulary();
-                    }
+                if (document.getElementById('api-key-form').style.display !== 'block' && dist > 50) {
+                    await fetchAndUpdateVocabulary();
                 }
-            }, false);
+            });
+        }
+
+        function getApiKey() {
+            const apiKey = localStorage.getItem('Gemini_apiKey');
+            if (!apiKey) {
+                console.error('Gemini API Key is missing.');
+                showApiKeyForm();
+                throw new Error('API Key is missing');
+            }
+            return apiKey;
         }
     </script>
 </body>
