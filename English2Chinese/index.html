@@ -388,7 +388,6 @@
             queue: [],
             currentWord: '',
             isSpeaking: false,
-            activeUtterance: null,
             speechCancelled: false
         };
 
@@ -508,7 +507,7 @@
             }
 
             try {
-                const details = await fetchWordDetails(apiKey, resolvedWord, options);
+                const details = await fetchWordDetails(apiKey, resolvedWord);
                 updateTranslationUI(details);
                 setStatus('success', '完成');
             } catch (error) {
@@ -691,7 +690,6 @@
 
             window.speechSynthesis.cancel();
             state.isSpeaking = true;
-            state.activeUtterance = utterance;
             state.speechCancelled = false;
             updateSpeakButtonState(true);
             setStatus('success', '播放語音中');
@@ -747,7 +745,7 @@
             return state.queue.pop() || DEFAULT_WORDS[Math.floor(Math.random() * DEFAULT_WORDS.length)];
         }
 
-        async function fetchWordDetails(apiKey, word, options = {}) {
+        async function fetchWordDetails(apiKey, word) {
             if (!apiKey) {
                 throw new Error('請先設定 Gemini API Key');
             }
@@ -891,7 +889,6 @@
 
         function resetSpeechState({ preserveCancellation = false } = {}) {
             state.isSpeaking = false;
-            state.activeUtterance = null;
             if (!preserveCancellation) {
                 state.speechCancelled = false;
             }
