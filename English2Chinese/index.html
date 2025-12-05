@@ -386,7 +386,10 @@
         const state = {
             words: [],
             queue: [],
-            currentWord: ''
+            currentWord: '',
+            isSpeaking: false,
+            activeUtterance: null,
+            speechCancelled: false
         };
 
         document.addEventListener('DOMContentLoaded', async () => {
@@ -624,6 +627,14 @@
             const panel = document.getElementById('chinese-translation');
             if (!panel) return;
 
+            if (state.isSpeaking) {
+                state.speechCancelled = true;
+                window.speechSynthesis.cancel();
+                resetSpeechState({ preserveCancellation: true });
+                setStatus('success', '已停止語音');
+                return;
+            }
+
             const blocks = Array.from(panel.querySelectorAll('.translation-block'));
             let bodyText = '';
 
@@ -653,9 +664,37 @@
             }
 
             const spokenContent = [state.currentWord, bodyText].filter(Boolean).join('. ');
-            const utterance = new SpeechSynthesisUtterance(spokenContent || state.currentWord || '');
+            const finalText = spokenContent || state.currentWord || '';
+            if (!finalText) {
+                setStatus('error', '沒有可播放的內容');
+                return;
+            }
+
+            const utterance = new SpeechSynthesisUtterance(finalText);
             utterance.lang = 'en-US';
+            utterance.onend = () => {
+                const wasCancelled = state.speechCancelled;
+                resetSpeechState();
+                if (!wasCancelled) {
+                    setStatus('success', '語音播放完成');
+                }
+            };
+            utterance.onerror = () => {
+                const wasCancelled = state.speechCancelled;
+                resetSpeechState();
+                if (wasCancelled) {
+                    setStatus('success', '已停止語音');
+                    return;
+                }
+                setStatus('error', '語音播放失敗');
+            };
+
             window.speechSynthesis.cancel();
+            state.isSpeaking = true;
+            state.activeUtterance = utterance;
+            state.speechCancelled = false;
+            updateSpeakButtonState(true);
+            setStatus('success', '播放語音中');
             window.speechSynthesis.speak(utterance);
         }
 
@@ -848,6 +887,21 @@
                 return spoken;
             }
             return posText.replace(/\./g, '').trim();
+        }
+
+        function resetSpeechState({ preserveCancellation = false } = {}) {
+            state.isSpeaking = false;
+            state.activeUtterance = null;
+            if (!preserveCancellation) {
+                state.speechCancelled = false;
+            }
+            updateSpeakButtonState(false);
+        }
+
+        function updateSpeakButtonState(isSpeaking) {
+            const speakBtn = document.getElementById('speak-button');
+            if (!speakBtn) return;
+            speakBtn.textContent = isSpeaking ? '停止語音' : '播放語音';
         }
     </script>
 </body>
