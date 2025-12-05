@@ -5,22 +5,46 @@
   <meta charset="UTF-8">
   <title>Editable Text</title>
   <style>
-    body {
-      display: flex;
-      height: 100vh;
-      justify-content: space-between;
-      align-items: center;
-      margin: 0;
-      padding: 0 20px;         /* Proper page padding */
-      background-color: white; /* Default white background */
-      color: black;            /* Default black text */
+    :root {
+      --page-bg: #ffffff;
+      --text-color: #111111;
+      --border-color: rgba(0, 0, 0, 0.12);
+      --button-bg: #111111;
+      --button-text: #ffffff;
     }
 
-    @media (prefers-color-scheme: dark) {
-      body {
-        background-color: rgb(25, 25, 25); /* Black background in dark mode */
-        color: white;                      /* White text in dark mode */
-      }
+    body.theme-dark {
+      --page-bg: rgb(25, 25, 25);
+      --text-color: #f5f5f5;
+      --border-color: rgba(255, 255, 255, 0.25);
+      --button-bg: #ffffff;
+      --button-text: #111111;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      padding: 18px;
+      background-color: var(--page-bg);
+      transition: background-color 0.25s ease;
+    }
+
+    .viewport-shell {
+      display: flex;
+      min-height: calc(100vh - 36px);
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 20px;
+      border: 1px solid var(--border-color);
+      border-radius: 28px;
+      background-color: var(--page-bg);
+      color: var(--text-color);
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
+      transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
     }
 
     .center {
@@ -34,70 +58,150 @@
       bottom: 20px;
       right: 20px;
       opacity: 0;
-      background-color: white; /* Default button background color */
-      color: black;            /* Default button text color */
-      transition: background-color 0.3s, color 0.3s; /* Smooth transition for color change */
+      pointer-events: none;
+      border: 1px solid var(--border-color);
+      background-color: var(--button-bg);
+      color: var(--button-text);
+      border-radius: 999px;
+      cursor: pointer;
+      transition: background-color 0.3s ease, color 0.3s ease, opacity 0.3s ease;
     }
-    
+
+    body.show-mode-button #colorThemeButton,
+    #colorThemeButton:focus-visible,
     #colorThemeButton:hover {
-      opacity: 0.6;
+      opacity: 0.75;
+      pointer-events: auto;
     }
   </style>
 </head>
 
 <body>
-  <div>"</div>
-  <div class="center" contenteditable="true" id="editableText">I can do all things…</div>
-  <div>"</div>
+  <div class="viewport-shell" id="viewport-shell">
+    <div>"</div>
+    <div class="center" contenteditable="true" id="editableText">I can do all things…</div>
+    <div>"</div>
+  </div>
 
   <button id="colorThemeButton" onclick="toggleColorTheme()">Mode</button>
 
   <script>
-    /* Get the editable text element */
-    const editableText = document.getElementById('editableText');
+    const refs = {
+      editableText: document.getElementById('editableText'),
+      themeButton: document.getElementById('colorThemeButton'),
+      viewport: document.getElementById('viewport-shell')
+    };
+    const systemThemeQuery = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
 
-    /* Attempt to retrieve saved text content from local storage */
-    const savedText = localStorage.getItem('savedText');
+    init();
 
-    /* If saved text content exists, display it in the editable text area */
-    if (savedText) editableText.innerText = savedText;
-    
-    /* Check the theme setting in localStorage when the page loads */
-    document.addEventListener('DOMContentLoaded', function() {
-      const theme = localStorage.getItem('mode');
-      if (theme) {
-        setTheme(theme);
-        updateButtonStyle(theme);
+    function init() {
+      loadSavedText();
+      attachTextListener();
+      setThemeFromPreferences();
+      watchSystemTheme();
+      setupModeButtonReveal();
+      window.addEventListener('storage', handleStorageChange);
+    }
+
+    function loadSavedText() {
+      if (!refs.editableText) return;
+      const savedText = localStorage.getItem('savedText');
+      if (savedText) {
+        refs.editableText.innerText = savedText;
       }
-    });
-
-    /* Listen for text change events */
-    editableText.addEventListener('input', function () {
-      /* Save the new text content to local storage */
-      localStorage.setItem('savedText', this.innerText);
-    });
-
-    /* Updates the button style based on the current theme */
-    function updateButtonStyle(theme) {
-      const button = document.getElementById('colorThemeButton');
-      button.style.backgroundColor = theme === 'dark' ? 'white' : 'black';
-      button.style.color = theme === 'dark' ? 'black' : 'white';
-      button.innerText = theme === 'dark' ? 'Light' : 'Dark';
     }
 
-    /* Set the theme of the document body based on the given theme parameter. */
-    function setTheme(theme) {
-      document.body.style.backgroundColor = theme === 'dark' ? 'rgb(25, 25, 25)' : 'white';
-      document.body.style.color = theme === 'dark' ? 'white' : 'black';
+    function attachTextListener() {
+      if (!refs.editableText) return;
+      refs.editableText.addEventListener('input', (event) => {
+        localStorage.setItem('savedText', event.target.innerText);
+      });
     }
 
-    /* Toggles the color theme by retrieving the current theme from local storage, 
-    setting the new theme, and updating the local storage with the new theme. */
+    function handleStorageChange(event) {
+      if (event.key === 'mode') {
+        setThemeFromPreferences();
+      }
+      if (event.key === 'savedText' && refs.editableText && event.newValue) {
+        refs.editableText.innerText = event.newValue;
+      }
+    }
+
+    function setThemeFromPreferences() {
+      const storedTheme = localStorage.getItem('mode');
+      const prefersDark = systemThemeQuery ? systemThemeQuery.matches : false;
+      const theme = storedTheme || (prefersDark ? 'dark' : 'light');
+      applyTheme(theme);
+    }
+
+    function applyTheme(theme) {
+      const useDark = theme === 'dark';
+      document.body.classList.toggle('theme-dark', useDark);
+      updateButtonLabel(theme);
+    }
+
+    function updateButtonLabel(theme) {
+      if (!refs.themeButton) return;
+      refs.themeButton.innerText = theme === 'dark' ? 'Light' : 'Dark';
+    }
+
     function toggleColorTheme() {
-      const newTheme = localStorage.getItem('mode') === 'light' ? 'dark' : 'light';
-      setTheme(newTheme);
+      const currentTheme = document.body.classList.contains('theme-dark') ? 'dark' : 'light';
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
       localStorage.setItem('mode', newTheme);
-      updateButtonStyle(newTheme);
+      applyTheme(newTheme);
+    }
+
+    function watchSystemTheme() {
+      if (!systemThemeQuery) return;
+      const handleChange = (event) => {
+        if (!localStorage.getItem('mode')) {
+          applyTheme(event.matches ? 'dark' : 'light');
+        }
+      };
+      if (systemThemeQuery.addEventListener) {
+        systemThemeQuery.addEventListener('change', handleChange);
+      } else if (systemThemeQuery.addListener) {
+        systemThemeQuery.addListener(handleChange);
+      }
+    }
+
+    function setupModeButtonReveal() {
+      if (!refs.viewport || !refs.themeButton) return;
+      let hideTimer = null;
+
+      const showButton = (temporary = false) => {
+        document.body.classList.add('show-mode-button');
+        if (temporary) {
+          clearTimeout(hideTimer);
+          hideTimer = setTimeout(() => {
+            document.body.classList.remove('show-mode-button');
+          }, 3500);
+        }
+      };
+
+      const hideButton = () => {
+        if (refs.themeButton.matches(':focus-visible')) return;
+        document.body.classList.remove('show-mode-button');
+      };
+
+      refs.viewport.addEventListener('pointerenter', (event) => {
+        if (event.pointerType === 'touch') return;
+        showButton();
+      });
+
+      refs.viewport.addEventListener('pointerleave', (event) => {
+        if (event.pointerType === 'touch') return;
+        hideButton();
+      });
+
+      refs.viewport.addEventListener('touchstart', () => {
+        showButton(true);
+      }, { passive: true });
+
+      refs.themeButton.addEventListener('focusin', () => showButton());
+      refs.themeButton.addEventListener('blur', () => hideButton());
     }
   </script>
 </body>

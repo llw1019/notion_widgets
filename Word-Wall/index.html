@@ -1,153 +1,300 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Word Wall</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --outer-bg: #ffffff;
+      --text-strong: #1c212a;
+      --text-muted: #6b7280;
+      --accent: #ff7a18;
+      --error: #e45858;
+    }
+
+    [data-theme="dark"] {
+      --outer-bg: rgb(25, 25, 25);
+      --text-strong: #f4f5f7;
+      --text-muted: #a4afbd;
+      --accent: #ffa95c;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
       margin: 0;
-      padding: 0;
-      /* Prevent images from overflowing the screen */
+      font-family: 'Space Grotesk', 'Noto Sans TC', sans-serif;
+      background: var(--outer-bg);
+      color: var(--text-strong);
+      min-height: 100vh;
       overflow: hidden;
-      background-color: white;
+    }
+
+    .collage-stage {
+      position: fixed;
+      inset: 0;
+      background: var(--outer-bg);
+      overflow: hidden;
     }
 
     .photo {
       position: absolute;
-      /* border: 2px solid #000; */
       cursor: grab;
-      /* Set the initial width and height of the photo */
-      /* height: auto; */
+      border-radius: 12px;
+      box-shadow: none;
+      transition: transform 0.2s ease;
     }
 
-    @media (prefers-color-scheme: dark) {
-      body {
-        background-color: rgb(25, 25, 25); /* Black background in dark mode */
-      }
+    [data-theme="dark"] .photo {
+      filter: invert(100%);
+    }
 
-      .photo {
-        filter: invert(100%); /* Invert effect for images in dark mode */
+    .photo.loading {
+      opacity: 0;
+    }
+
+    .photo:not(.loading):hover {
+      transform: translate3d(0, -2px, 0);
+    }
+
+    .hud {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      min-width: min(420px, 90vw);
+    }
+
+    [data-theme="dark"] .hud {
+      background: none;
+      border: none;
+    }
+
+    .status-line {
+      margin: 0;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      text-align: center;
+      min-height: 18px;
+    }
+
+    .status-line.loading::before {
+      content: '';
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: 2px solid rgba(0, 0, 0, 0.12);
+      border-top-color: var(--accent);
+      animation: spin 0.8s linear infinite;
+      margin-right: 6px;
+      vertical-align: -2px;
+    }
+
+    .status-line.error {
+      color: var(--error);
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @media (max-width: 520px) {
+      .hud {
+        min-width: auto;
+        width: calc(100% - 20px);
+        left: 10px;
+        right: 10px;
+        transform: none;
       }
     }
   </style>
 </head>
-
 <body>
-  <script>
-    const theme = localStorage.getItem('mode');
-    let img_count = 1;
+  <div class="collage-stage" id="collage-stage"></div>
+  <div class="hud">
+    <p class="status-line loading" id="collage-status">正在載入單字牆...</p>
+  </div>
 
-    /* Check the theme setting in localStorage when the page loads */
-    document.addEventListener('DOMContentLoaded', function() {
-      if (theme)
-        document.body.style.backgroundColor = theme === 'dark' ? 'rgb(25, 25, 25)' : 'white';
+  <script>
+    const state = {
+      stage: null,
+      statusLine: null,
+      sources: []
+    };
+    const systemThemeQuery = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      state.stage = document.getElementById('collage-stage');
+      state.statusLine = document.getElementById('collage-status');
+      setThemeFromLocalStorage();
+      watchSystemTheme();
+      getImageSources();
     });
 
-    function getImageCount() {
-      const existingPositions = [];
+    window.addEventListener('storage', (event) => {
+      if (event.key === 'mode') {
+        setThemeFromLocalStorage();
+      }
+    });
 
-      // Check for existence of images until one is not found
+    function setThemeFromLocalStorage() {
+      const storedTheme = localStorage.getItem('mode');
+      const prefersDark = systemThemeQuery ? systemThemeQuery.matches : false;
+      const useDark = storedTheme ? storedTheme === 'dark' : prefersDark;
+      applyTheme(useDark);
+    }
+
+    function applyTheme(useDark) {
+      document.documentElement.dataset.theme = useDark ? 'dark' : 'light';
+    }
+
+    function watchSystemTheme() {
+      if (!systemThemeQuery) return;
+      systemThemeQuery.addEventListener('change', (event) => {
+        if (!localStorage.getItem('mode')) {
+          applyTheme(event.matches);
+        }
+      });
+    }
+
+    function updateStatus(message, mode = 'idle') {
+      if (!state.statusLine) return;
+      state.statusLine.textContent = message;
+      state.statusLine.classList.remove('loading', 'error');
+      if (mode === 'loading') {
+        state.statusLine.classList.add('loading');
+      } else if (mode === 'error') {
+        state.statusLine.classList.add('error');
+      }
+    }
+
+    function getImageSources() {
+      updateStatus('正在掃描圖片...', 'loading');
+      state.sources = [];
+      let nextIndex = 1;
+
       function checkImageExists() {
-        const img = new Image();
-        img.onload = function () {
-          img_count++;
+        const probe = new Image();
+        const fileName = `image_${nextIndex}.png`;
+        probe.onload = () => {
+          state.sources.push(fileName);
+          nextIndex++;
           checkImageExists();
         };
-        img.onerror = function () {
-          for (let i = 1; i < img_count; i++) {
-            createPhotoElement(`image_${i}.png`, existingPositions);
+        probe.onerror = () => {
+          if (!state.sources.length) {
+            updateStatus('找不到任何圖片，請確認 Pic 資料夾。', 'error');
+            return;
           }
+          renderPhotos();
         };
-        img.src = `Pic/image_${img_count}.png`;
+        probe.src = `Pic/${fileName}`;
       }
 
-      // Start checking for image existence
       checkImageExists();
     }
 
-    function getRandomSize() {
-      const referenceSize = (window.innerWidth > window.innerHeight) ? window.innerHeight : window.innerWidth;
-      
-      const minPercentage = 1 / img_count; // 20%
-      const maxPercentage = 2 / img_count; // 60%
-      
-      const minSize = Math.floor(referenceSize * minPercentage);
-      const maxSize = Math.floor(referenceSize * maxPercentage);
-      
-      return Math.floor(Math.random() * (maxSize - minSize + 1)) + minSize;
+    function renderPhotos() {
+      if (!state.stage) return;
+      state.stage.innerHTML = '';
+      const positions = [];
+      state.sources.forEach((fileName) => {
+        const img = new Image();
+        img.src = `Pic/${fileName}`;
+        img.alt = fileName;
+        img.classList.add('photo', 'loading');
+        img.addEventListener('load', () => {
+          positionPhoto(img, positions);
+          makeInteractive(img);
+        });
+        img.addEventListener('error', () => {
+          img.remove();
+          updateStatus(`無法載入 ${fileName}`, 'error');
+        });
+        state.stage.appendChild(img);
+      });
+      updateStatus('');
     }
 
-    function getRandomPosition(existingPositions, imgWidth, imgHeight) {
-      let x, y, width, height, size;
-      do {
-        size = getRandomSize();
-        if (imgWidth > imgHeight) {
-          width = size;
-          height = Math.floor(size * (imgHeight / imgWidth));
-        } else {
-          width = Math.floor(size * (imgWidth / imgHeight));
-          height = size;
+    function positionPhoto(img, existingPositions) {
+      const bounds = getStageBounds();
+      const placement = getRandomPlacement(existingPositions, img.naturalWidth, img.naturalHeight, bounds);
+      img.style.width = `${placement.width}px`;
+      img.style.height = `${placement.height}px`;
+      img.style.left = `${placement.x}px`;
+      img.style.top = `${placement.y}px`;
+      img.classList.remove('loading');
+    }
+
+    function getStageBounds() {
+      return {
+        width: state.stage?.clientWidth || 0,
+        height: state.stage?.clientHeight || 0
+      };
+    }
+
+    function getRandomPlacement(existingPositions, imgWidth, imgHeight, bounds) {
+      const { width: stageWidth, height: stageHeight } = bounds;
+      const attempts = 200;
+      const ratio = imgWidth && imgHeight ? imgWidth / imgHeight : 1;
+      const safeCount = Math.max(1, state.sources.length);
+      const reference = Math.min(window.innerWidth, window.innerHeight) || 300;
+      const minPercentage = 1 / safeCount;
+      const maxPercentage = 2 / safeCount;
+      const minSize = Math.max(40, Math.floor(reference * minPercentage));
+      const maxSize = Math.max(minSize + 10, Math.floor(reference * maxPercentage));
+
+      for (let i = 0; i < attempts; i++) {
+        const size = randomInt(minSize, maxSize);
+        const width = ratio >= 1 ? size : size * ratio;
+        const height = ratio >= 1 ? size / ratio : size;
+        const x = Math.random() * Math.max(1, stageWidth - width);
+        const y = Math.random() * Math.max(1, stageHeight - height);
+        const overlaps = existingPositions.some(pos =>
+          x < pos.x + pos.width &&
+          x + width > pos.x &&
+          y < pos.y + pos.height &&
+          y + height > pos.y
+        );
+        if (!overlaps) {
+          const placement = { x, y, width, height };
+          existingPositions.push(placement);
+          return placement;
         }
-        
-        x = Math.random() * (window.innerWidth - width);
-        y = Math.random() * (window.innerHeight - height);
-      } while (existingPositions.some(pos =>
-        x < pos.x + pos.width &&
-        x + width > pos.x &&
-        y < pos.y + pos.height &&
-        y + height > pos.y
-      ));
-      existingPositions.push({ x, y, width, height });
-      return { x, y, size };
+      }
+
+      return { x: 0, y: 0, width: reference * 0.6, height: reference * 0.6 };
     }
 
-    function createPhotoElement(photo, existingPositions) {
-      const img = document.createElement('img');
-      img.src = `Pic/${photo}`;
-      img.classList.add('photo');
-      
-      // Get the actual width and height of the image
-      const imgWidth = img.naturalWidth;
-      const imgHeight = img.naturalHeight;
-      const { x, y, size } = getRandomPosition(existingPositions, imgWidth, imgHeight);
-      
-      if (imgWidth > imgHeight) {
-        img.style.width = `${size}px`;
-        img.style.height = 'auto';
-      } else {
-        img.style.width = 'auto';
-        img.style.height = `${size}px`;
-      }
-      img.style.left = `${x}px`;
-      img.style.top = `${y}px`;
-
-      if (theme)
-        img.style.filter = theme === 'dark' ? 'invert(100%)' : 'none';
-
-      document.body.appendChild(img);
-
-      img.addEventListener('mousedown', (e) => {
-        e.preventDefault();
+    function makeInteractive(img) {
+      img.addEventListener('mousedown', (event) => {
+        event.preventDefault();
         img.style.cursor = 'grabbing';
-        let initialX = e.clientX;
-        let initialY = e.clientY;
+        let initialX = event.clientX;
+        let initialY = event.clientY;
 
         function movePhoto(e) {
           const dx = e.clientX - initialX;
           const dy = e.clientY - initialY;
           let newX = img.offsetLeft + dx;
           let newY = img.offsetTop + dy;
-
-          // Ensure the photo stays within the window bounds
-          newX = Math.max(0, Math.min(window.innerWidth - img.width, newX));
-          newY = Math.max(0, Math.min(window.innerHeight - img.height, newY));
-
+          const stageWidth = state.stage.clientWidth;
+          const stageHeight = state.stage.clientHeight;
+          newX = Math.max(0, Math.min(stageWidth - img.offsetWidth, newX));
+          newY = Math.max(0, Math.min(stageHeight - img.offsetHeight, newY));
           img.style.left = `${newX}px`;
           img.style.top = `${newY}px`;
           initialX = e.clientX;
@@ -164,27 +311,42 @@
         window.addEventListener('mouseup', stopMoving);
       });
 
-      // Add mousewheel event listener for scaling
-      img.addEventListener('wheel', (e) => {
-        e.preventDefault();
-        const delta = e.deltaY || e.detail || e.wheelDelta;
-        let newSize;
+      img.addEventListener('wheel', (event) => {
+        event.preventDefault();
+        if (!state.stage) return;
 
-        if (delta > 0) {
-          newSize = img.width * 0.9;
-        } else {
-          newSize = Math.min(img.width * 1.1,
-            img.width + window.innerWidth - (img.offsetLeft + img.offsetWidth),
-            img.width + window.innerHeight - (img.offsetTop + img.offsetHeight));
+        const rect = img.getBoundingClientRect();
+        const currentWidth = rect.width;
+        const currentHeight = rect.height || 1;
+        const ratio = (img.naturalWidth && img.naturalHeight)
+          ? img.naturalWidth / img.naturalHeight
+          : currentWidth / currentHeight;
+        const safeRatio = ratio > 0 ? ratio : 1;
+        const scale = event.deltaY > 0 ? 0.9 : 1.1;
+        const stageWidth = state.stage.clientWidth;
+        const stageHeight = state.stage.clientHeight;
+        const availableWidth = Math.max(0, stageWidth - img.offsetLeft);
+        const availableHeight = Math.max(0, stageHeight - img.offsetTop);
+        const maxWidthByHeight = availableHeight * safeRatio;
+        const maxAllowedWidth = Math.min(availableWidth, maxWidthByHeight);
+
+        if (maxAllowedWidth <= 0) return;
+
+        let targetWidth = currentWidth * scale;
+        targetWidth = Math.min(targetWidth, maxAllowedWidth);
+        if (maxAllowedWidth >= 40) {
+          targetWidth = Math.max(40, targetWidth);
         }
 
-        img.style.width = `${newSize}px`;
-        img.style.height = 'auto';
+        const targetHeight = targetWidth / safeRatio;
+        img.style.width = `${targetWidth}px`;
+        img.style.height = `${targetHeight}px`;
       });
     }
-    
-    getImageCount();
+
+    function randomInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
   </script>
 </body>
-
 </html>

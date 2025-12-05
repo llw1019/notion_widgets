@@ -1,109 +1,257 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Auto-slideshow</title>
-  <!--Stylesheet-->
-  <link rel="stylesheet" href="style.css">
-</head>
+  <title>Auto Slideshow</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --outer-bg: #ffffff;
+      --surface-bg: rgba(245, 247, 250, 0.9);
+      --text-strong: #1c212a;
+      --text-muted: #6b7280;
+      --accent: #ff7a18;
+      --error: #e45858;
+    }
 
+    [data-theme="dark"] {
+      --outer-bg: rgb(25, 25, 25);
+      --surface-bg: rgba(19, 23, 33, 0.85);
+      --text-strong: #f4f5f7;
+      --text-muted: #a4afbd;
+      --accent: #ffa95c;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: 'Space Grotesk', 'Noto Sans TC', sans-serif;
+      background: var(--outer-bg);
+      color: var(--text-strong);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 12px;
+    }
+
+    .widget-shell {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .slideshow-frame {
+      width: min(85vmin, 95vw);
+      max-width: 85vmin;
+      background: var(--surface-bg);
+      border: 18px solid rgba(255, 255, 255, 0.95);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 6px 14px rgba(15, 23, 42, 0.18);
+      position: relative;
+    }
+
+    [data-theme="dark"] .slideshow-frame {
+      box-shadow: none;
+      border-color: rgba(255, 255, 255, 0.08);
+    }
+
+    #slideshow-track {
+      width: 100%;
+      display: flex;
+    }
+
+    #slideshow-track img {
+      width: 100%;
+      height: auto;
+      flex-shrink: 0;
+      object-fit: contain;
+      background: #000;
+    }
+
+    .status-line {
+      min-height: 20px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .status-line:empty {
+      display: none;
+    }
+
+    .status-line.loading::before {
+      content: '';
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 2px solid rgba(0, 0, 0, 0.1);
+      border-top-color: var(--accent);
+      animation: spin 0.8s linear infinite;
+    }
+
+    .status-line.error {
+      color: var(--error);
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @media (max-width: 540px) {
+      body {
+        padding: 24px 10px;
+      }
+
+      .slideshow-frame {
+        border-width: 12px;
+      }
+    }
+  </style>
+</head>
 <body>
-  <div class="container">
-    <div class="wrapper">
-      <!--
-      <img src="image-1.jpg">
-      <img src="image-2.jpg">
-      <img src="image-3.jpg">
-      <img src="image-4.jpg">
-      <img src="image-1.jpg">
-      -->
+  <div class="widget-shell">
+    <div class="slideshow-frame">
+      <div class="wrapper" id="slideshow-track"></div>
     </div>
+    <p class="status-line loading" id="status-line">正在準備幻燈片...</p>
   </div>
 
   <script>
-    const container = document.querySelector('.wrapper');
-    let numberOfImages = 0;
+    const state = {
+      container: null,
+      statusLine: null,
+      imageCount: 0,
+      animationStyle: null
+    };
+    const systemThemeQuery = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
 
-    // Function to get number of images dynamically
+    document.addEventListener('DOMContentLoaded', () => {
+      state.container = document.getElementById('slideshow-track');
+      state.statusLine = document.getElementById('status-line');
+      setThemeFromLocalStorage();
+      watchSystemTheme();
+      getImageCount();
+    });
+
+    window.addEventListener('storage', (event) => {
+      if (event.key === 'mode') {
+        setThemeFromLocalStorage();
+      }
+    });
+
+    function setThemeFromLocalStorage() {
+      const storedTheme = localStorage.getItem('mode');
+      const prefersDark = systemThemeQuery ? systemThemeQuery.matches : false;
+      const useDark = storedTheme ? storedTheme === 'dark' : prefersDark;
+      applyTheme(useDark);
+    }
+
+    function applyTheme(useDark) {
+      document.documentElement.dataset.theme = useDark ? 'dark' : 'light';
+    }
+
+    function watchSystemTheme() {
+      if (!systemThemeQuery) return;
+      systemThemeQuery.addEventListener('change', (event) => {
+        if (!localStorage.getItem('mode')) {
+          applyTheme(event.matches);
+        }
+      });
+    }
+
+    function updateStatus(message, mode = 'idle') {
+      if (!state.statusLine) return;
+      state.statusLine.textContent = message || '';
+      state.statusLine.classList.remove('loading', 'error');
+      if (mode === 'loading') {
+        state.statusLine.classList.add('loading');
+      } else if (mode === 'error') {
+        state.statusLine.classList.add('error');
+      }
+      state.statusLine.hidden = !message;
+    }
+
     function getImageCount() {
+      updateStatus('正在掃描圖片...', 'loading');
+      state.imageCount = 0;
       let i = 1;
 
-      // Check for existence of images until one is not found
       function checkImageExists() {
-        const img = new Image();
-        img.onload = function () {
-          numberOfImages++;
+        const probe = new Image();
+        probe.onload = () => {
+          state.imageCount++;
           checkImageExists();
         };
-        img.onerror = function () {
+        probe.onerror = () => {
+          if (!state.imageCount) {
+            updateStatus('找不到任何圖片，請確認 Pic 資料夾。', 'error');
+            return;
+          }
           generateImages();
         };
-        img.src = `Pic/image_${i}.jpg`;
+        probe.src = `Pic/image_${i}.jpg`;
         i++;
       }
 
-      // Start checking for image existence
       checkImageExists();
     }
 
-    // Function to generate img elements dynamically
     function generateImages() {
-      for (let i = 1; i <= numberOfImages; i++) {
+      if (!state.container) return;
+      state.container.innerHTML = '';
+      for (let i = 1; i <= state.imageCount; i++) {
         const img = document.createElement('img');
         img.src = `Pic/image_${i}.jpg`;
-        container.appendChild(img);
+        img.alt = `Slideshow image ${i}`;
+        state.container.appendChild(img);
       }
-      const img = document.createElement('img');
-      img.src = `Pic/image_1.jpg`;
-      container.appendChild(img);
 
-      // Update animation styles
+      const loopImage = document.createElement('img');
+      loopImage.src = 'Pic/image_1.jpg';
+      loopImage.alt = 'Slideshow image 1';
+      state.container.appendChild(loopImage);
+
       updateAnimationStyles();
+      updateStatus('');
     }
 
-    // Function to update animation styles
     function updateAnimationStyles() {
-      let animationDuration = `${numberOfImages * 5}s`; // Calculate animation duration.
-      let animationPercent = 100 / numberOfImages; // Calculate percentage of a second.
+      if (!state.imageCount || !state.container) return;
+
+      const animationDuration = `${state.imageCount * 5}s`;
+      const animationPercent = 100 / state.imageCount;
 
       let styles = '@keyframes slide {';
-      styles += `
-                ${0}% {
-                    transform: translateX(0);
-                }`;
-      for (let i = 0; i < numberOfImages; i++) {
-        styles += `
-                ${(animationPercent * i + animationPercent * (4 / 5)).toFixed(2)}% {
-                    transform: translateX(-${i * 100}%);
-                }`;
-        styles += `
-                ${(animationPercent * i + animationPercent).toFixed(2)}% {
-                    transform: translateX(-${(i + 1) * 100}%);
-                }`;
+      styles += '0% { transform: translateX(0); }';
+      for (let i = 0; i < state.imageCount; i++) {
+        styles += `${(animationPercent * i + animationPercent * 0.8).toFixed(2)}% { transform: translateX(-${i * 100}%); }`;
+        styles += `${(animationPercent * (i + 1)).toFixed(2)}% { transform: translateX(-${(i + 1) * 100}%); }`;
       }
-      styles += `
-                ${100}% {
-                    transform: translateX(-${numberOfImages * 100}%);
-                }`;
+      styles += `100% { transform: translateX(-${state.imageCount * 100}%); }`;
       styles += '}';
+      styles += `#slideshow-track { animation: slide ${animationDuration} linear infinite; }`;
 
-      styles += `
-        .wrapper {
-            width: 100%;
-            display: flex;
-            animation: slide ${animationDuration} linear infinite; /* Modify animation duration */
-        }`;
+      if (!state.animationStyle) {
+        state.animationStyle = document.createElement('style');
+        state.animationStyle.type = 'text/css';
+        document.head.appendChild(state.animationStyle);
+      }
 
-      const styleSheet = document.createElement('style');
-      styleSheet.type = 'text/css';
-      styleSheet.innerText = styles;
-      document.head.appendChild(styleSheet);
+      state.animationStyle.textContent = styles;
     }
-
-    // Call the function to get the image count and start generating images
-    getImageCount();
   </script>
 </body>
-
 </html>

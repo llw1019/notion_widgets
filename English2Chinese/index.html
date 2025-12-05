@@ -9,26 +9,26 @@
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --page-bg: #f5f6f8;
+            --outer-bg: #ffffff;
             --card-bg: #ffffff;
             --card-border: rgba(28, 33, 42, 0.08);
             --text-strong: #1c212a;
             --text-muted: #6b7280;
             --accent: #ff7a18;
             --accent-dark: #d95b00;
-            --shadow-soft: 0 10px 22px rgba(15, 23, 42, 0.15);
+            --shadow-soft: 0 6px 14px rgba(15, 23, 42, 0.16);
             --panel-bg: rgba(245, 247, 250, 0.9);
         }
 
         [data-theme="dark"] {
-            --page-bg: #0f1219;
+            --outer-bg: rgb(25, 25, 25);
             --card-bg: rgba(15, 18, 28, 0.92);
             --card-border: rgba(255, 255, 255, 0.06);
             --text-strong: #f4f5f7;
             --text-muted: #a4afbd;
             --accent: #ffa95c;
             --accent-dark: #ff7c1f;
-            --shadow-soft: 0 18px 32px rgba(0, 0, 0, 0.55);
+            --shadow-soft: 0 12px 22px rgba(0, 0, 0, 0.45);
             --panel-bg: rgba(19, 23, 33, 0.85);
         }
 
@@ -39,7 +39,7 @@
         body {
             margin: 0;
             font-family: 'Space Grotesk', 'Noto Sans TC', sans-serif;
-            background: var(--page-bg);
+            background: var(--outer-bg);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -390,9 +390,12 @@
             isSpeaking: false,
             speechCancelled: false
         };
+        const systemThemeQuery = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
 
         document.addEventListener('DOMContentLoaded', async () => {
             setThemeFromLocalStorage();
+            watchSystemTheme();
+            window.addEventListener('storage', handleStorageChange);
 
             await prepareWordList();
             initializeWordQueues();
@@ -407,9 +410,33 @@
 
         function setThemeFromLocalStorage() {
             const storedTheme = localStorage.getItem('mode');
-            const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-            const useDarkTheme = storedTheme ? storedTheme === 'dark' : prefersDark;
-            document.documentElement.dataset.theme = useDarkTheme ? 'dark' : 'light';
+            const prefersDark = systemThemeQuery ? systemThemeQuery.matches : false;
+            const theme = storedTheme || (prefersDark ? 'dark' : 'light');
+            applyTheme(theme);
+        }
+
+        function applyTheme(theme) {
+            document.documentElement.dataset.theme = theme === 'dark' ? 'dark' : 'light';
+        }
+
+        function watchSystemTheme() {
+            if (!systemThemeQuery) return;
+            const handleChange = (event) => {
+                if (!localStorage.getItem('mode')) {
+                    applyTheme(event.matches ? 'dark' : 'light');
+                }
+            };
+            if (systemThemeQuery.addEventListener) {
+                systemThemeQuery.addEventListener('change', handleChange);
+            } else if (systemThemeQuery.addListener) {
+                systemThemeQuery.addListener(handleChange);
+            }
+        }
+
+        function handleStorageChange(event) {
+            if (event.key === 'mode') {
+                setThemeFromLocalStorage();
+            }
         }
 
         async function checkAndSetApiKey() {

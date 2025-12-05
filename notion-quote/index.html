@@ -9,37 +9,80 @@
     href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400&family=Roboto+Mono:wght@300;400&family=Roboto:wght@300;400&display=swap"
     rel="stylesheet">
   <style>
+    :root {
+      --page-bg: #ffffff;
+      --card-bg: #ffffff;
+      --border-color: rgba(0, 0, 0, 0.12);
+      --text-strong: #1f1f28;
+      --text-muted: #6b7280;
+      --accent: #ff7a18;
+      --button-bg: rgba(255, 255, 255, 0.8);
+      --button-text: #1f1f28;
+      --button-border: rgba(0, 0, 0, 0.08);
+      --card-shadow: 0 8px 16px rgba(15, 23, 42, 0.12);
+      --panel-shadow: 0 6px 14px rgba(15, 23, 42, 0.2);
+    }
+
+    body.theme-dark {
+      --page-bg: rgb(25, 25, 25);
+      --card-bg: rgba(10, 11, 15, 0.92);
+      --border-color: rgba(255, 255, 255, 0.18);
+      --text-strong: #f4f5f7;
+      --text-muted: #a3a8b8;
+      --accent: #ffa95c;
+      --button-bg: rgba(24, 26, 33, 0.9);
+      --button-text: #f4f5f7;
+      --button-border: rgba(255, 255, 255, 0.12);
+      --card-shadow: 0 14px 24px rgba(0, 0, 0, 0.45);
+      --panel-shadow: 0 12px 22px rgba(0, 0, 0, 0.45);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      min-height: 50vh;
+      margin: 0;
+      min-height: 100vh;
+      padding: 20px;
+      background: var(--page-bg);
+      font-family: 'Roboto', sans-serif;
+      transition: background 0.25s ease;
+    }
+
+    .viewport-shell {
+      margin: 0 auto;
+      max-width: 760px;
+      border-radius: 28px;
+      border: 1px solid var(--border-color);
+      background: var(--card-bg);
+      color: var(--text-strong);
+      box-shadow: var(--card-shadow);
+      padding: 48px 46px;
       display: flex;
       flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      margin: 0;
-      padding: 0;
-    }
-
-    .card {
-      width: 80%;
-      max-width: 700px;
-    }
-
-    .card-body {
-      padding: 20px;
+      gap: 24px;
+      position: relative;
+      transition: background 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+      overflow: hidden;
     }
 
     .quote {
-      font-size: 1.5rem;
+      font-size: 1.6rem;
+      line-height: 1.6;
+      margin: 0;
     }
 
-    .content {
-      font-weight: 200;
+    .quote .dash {
+      display: inline-block;
+      opacity: 0.18;
+      margin-right: 8px;
     }
 
-    cite {
-      font-size: 80%;
-      font-weight: 500;
+    .quote cite {
+      font-size: 0.9rem;
       font-style: normal;
+      color: var(--text-muted);
     }
 
     .mono {
@@ -54,138 +97,182 @@
       font-family: 'Noto Serif JP', serif;
     }
 
-    .settings {
-      text-align: center;
-      border-color: 1px;
-      background-color: #eee;
+    .control-panel {
       position: fixed;
-      right: 0;
-      bottom: 0;
+      bottom: 24px;
+      right: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 16px 18px;
+      border-radius: 22px;
+      border: 1px solid var(--border-color);
+      background: rgba(255, 255, 255, 0.9);
+      box-shadow: var(--panel-shadow);
+      font-size: 0.85rem;
+      color: var(--text-muted);
       opacity: 0;
-      transition: opacity 0.2s;
+      pointer-events: none;
+      transform: translate3d(0, 8px, 0);
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      backdrop-filter: blur(8px);
+      z-index: 10;
     }
 
-    .settings:hover {
+    body.theme-dark .control-panel {
+      background: rgba(12, 13, 17, 0.92);
+    }
+
+    .viewport-shell:hover .control-panel,
+    .viewport-shell:focus-within .control-panel,
+    .control-panel.panel-visible {
       opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0);
     }
 
-    .settings button {
-      border: none;
-      background: none;
-      text-transform: capitalize;
+    .panel-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: nowrap;
+    }
+
+    .controls-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: nowrap;
+    }
+
+    .pill-button {
+      border: 1px solid var(--button-border);
+      border-radius: 999px;
+      background: var(--button-bg);
+      color: var(--button-text);
+      padding: 6px 14px;
       cursor: pointer;
-      transition: opacity 0.2s;
+      font-size: 0.85rem;
+      transition: transform 0.2s ease, opacity 0.2s ease;
     }
 
-    .settings button:hover {
-      opacity: 0.6;
+    .pill-button:hover {
+      transform: translateY(-1px);
     }
 
-    .settings .modes button {
-      font-size: 0.8rem;
+    .font-buttons {
+      flex-wrap: wrap;
     }
 
-    .settings .action {
-      padding: 0.4rem;
-    }
-
-    .settings .size button {
-      font-size: 1rem;
-    }
-
-    .settings .fonts button {
-      font-size: 1.2rem;
-      display: inline-block;
+    .font-buttons button {
+      min-width: 54px;
       text-align: center;
     }
 
-    .settings small {
-      font-size: 0.8rem;
-      float: left;
+    .size-buttons button {
+      width: 48px;
     }
 
-    .light {
-      color: rgb(0, 0, 0);
-      background-color: #ffffff !important;
+    .mode-buttons .pill-button.light {
+      background: #ffffff;
+      color: #1f1f28;
+      border-color: rgba(0, 0, 0, 0.15);
     }
 
-    .dark {
-      color: rgb(255, 255, 255);
-      background-color: rgb(25, 25, 25) !important;
+    .mode-buttons .pill-button.dark {
+      background: rgb(25, 25, 25);
+      color: #f5f5f5;
+      border-color: rgba(255, 255, 255, 0.25);
     }
 
-    @media (prefers-color-scheme: dark) {
-      body {
-        color: #fff;
-        background-color: rgb(25, 25, 25);
+    .mode-buttons .pill-button.clear-preferences {
+      background: transparent;
+      color: var(--accent);
+      border-color: transparent;
+      padding-right: 4px;
+    }
+
+    body.theme-dark .mode-buttons .pill-button.light {
+      color: #1f1f28;
+    }
+
+    body.theme-dark .mode-buttons .pill-button.dark {
+      background: rgb(25, 25, 25);
+      color: #f5f5f5;
+    }
+
+    @media (max-width: 640px) {
+      .viewport-shell {
+        padding: 32px 28px;
       }
-    }
 
-    .dash {
-      opacity: 0.2;
-    }
+      .panel-row {
+        flex-direction: column;
+        align-items: stretch;
+      }
 
-    hr {
-      border: none;
-      border-bottom: 1px solid gray;
-      opacity: 0.2;
-      padding: 0;
-      margin: 0;
-      margin-bottom: 0.4rem;
+      .controls-group {
+        flex-wrap: wrap;
+      }
+
+      .control-panel {
+        width: calc(100% - 40px);
+        right: 20px;
+        left: 20px;
+      }
     }
   </style>
 </head>
 
-<body class="light">
-  <div class="settings">
-    <div class="action sans">
-      <button class="shuffle">Shuffle</button>
-    </div>
-    <hr>
-    <div class="size sans">
-      <button class="plus">A+</button>
-      <button class="minus">A-</button>
-    </div>
-    <div class="modes sans">
-      <button class="light">Light</button>
-      <button class="dark">Dark</button>
-      <button class="">Clear</button>
-    </div>
-    <div class="fonts">
-      <button class="sans">
-        ag <br>
-        <small class="sans">Default</small>
-      </button>
-      <button class="serif">
-        ag <br>
-        <small class="sans">Serif</small>
-      </button>
-      <button class="mono">
-        ag <br>
-        <small class="sans">Mono</small>
-      </button>
-    </div>
-  </div>
-  <div class="quote mono">
-    <div class="card-body">
-      <blockquote class="blockquote">
-        <p class="content"></p>
-        <span class="dash">&horbar;</span> <cite title="Source Title"></cite>
-      </blockquote>
+<body>
+  <div class="viewport-shell">
+    <blockquote class="quote mono">
+      <p class="content"></p>
+      <div>
+        <span class="dash">&horbar;</span>
+        <cite title="Source Title"></cite>
+      </div>
+    </blockquote>
+    <div class="control-panel" aria-label="Quote controls">
+      <div class="panel-row">
+        <button class="pill-button shuffle">Shuffle</button>
+        <div class="mode-buttons controls-group">
+          <button class="pill-button light">Light</button>
+          <button class="pill-button dark">Dark</button>
+          <button class="pill-button clear-preferences" type="button">Clear</button>
+        </div>
+      </div>
+      <div class="panel-row">
+        <div class="font-buttons controls-group">
+          <button class="pill-button sans">Sans</button>
+          <button class="pill-button serif">Serif</button>
+          <button class="pill-button mono">Mono</button>
+        </div>
+        <div class="size-buttons controls-group">
+          <button class="pill-button plus">A+</button>
+          <button class="pill-button minus">A-</button>
+        </div>
+      </div>
     </div>
   </div>
   <script>
     document.addEventListener("DOMContentLoaded", () => {
+      const refs = {
+        body: document.body,
+        quote: document.querySelector(".quote"),
+        quoteText: document.querySelector("blockquote p"),
+        cite: document.querySelector("blockquote cite"),
+        shuffle: document.querySelector(".shuffle"),
+        fontButtons: document.querySelectorAll(".font-buttons button"),
+        modeButtons: document.querySelectorAll(".mode-buttons button"),
+        sizeButtons: document.querySelectorAll(".size-buttons button"),
+        viewport: document.querySelector('.viewport-shell'),
+        controlPanel: document.querySelector('.control-panel'),
+        clearButton: document.querySelector('.clear-preferences')
+      };
       let size = 1.5;
-      const body = document.querySelector("body");
-      const quote = document.querySelector(".quote");
-      const shuffle = document.querySelector(".shuffle");
-      const quote_text = document.querySelector("blockquote p");
-      const cite = document.querySelector("blockquote cite");
-      const fonts_buttons = document.querySelectorAll(".settings .fonts button");
-      const modes_buttons = document.querySelectorAll(".settings .modes button");
-      const size_buttons = document.querySelectorAll(".settings .size button");
-      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)");
+      const systemThemeQuery = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
 
       /* Asynchronous function to update a quote from the quotable API. */
       async function updateQuote() {
@@ -194,14 +281,13 @@
           const data = await response.json();
 
           if (response.ok) {
-            quote_text.textContent = data.quote;
-            cite.textContent = data.author;
+              setQuoteContent(data.quote, data.author);
           } else {
-            quote_text.textContent = "An error occurred";
+              setQuoteContent("An error occurred", '');
             console.log(data);
           }
         } catch (error) {
-          quote_text.textContent = "Oops! There is a problem with the quotes server.";
+            setQuoteContent("Oops! There is a problem with the quotes server.", '');
           console.log(error);
         }
 
@@ -209,92 +295,173 @@
       /* Asynchronous function to update a custom quote. It takes in a parameter f and makes a fetch request to f.
          It then processes the response and updates the quote_text and cite elements based on the data received. */
       async function updateQuoteCustom(f) {
-        const response = await fetch(f);
-        const data = await response.json();
-        if (response.ok && data.length > 0) {
-          random_quote = data[Math.floor(Math.random() * data.length - 1) + 1];
-          quote_text.textContent = random_quote.content;
-          cite.textContent = random_quote.author;
-        } else {
-          quote_text.textContent = "An error occured";
-          console.log(data);
+        try {
+          const response = await fetch(f);
+          const data = await response.json();
+          if (response.ok && Array.isArray(data) && data.length) {
+            const randomIndex = Math.floor(Math.random() * data.length);
+            const randomQuote = data[randomIndex];
+            setQuoteContent(randomQuote.content, randomQuote.author);
+          } else {
+            setQuoteContent("An error occurred", '');
+            console.log(data);
+          }
+        } catch (error) {
+          setQuoteContent("Oops! There is a problem with the custom quotes.", '');
+          console.log(error);
         }
+      }
+
+      function setQuoteContent(text, author) {
+        if (refs.quoteText) refs.quoteText.textContent = text || '';
+        if (refs.cite) refs.cite.textContent = author || '';
       }
 
       /* Update the style based on the values stored in the localStorage. */
       function updateStyle() {
-        const font = localStorage.getItem('font') || 'sans';
-        changeFont(font);
+        const storedFont = localStorage.getItem('font');
+        const font = storedFont || 'sans';
+        changeFont(font, Boolean(storedFont));
+        const storedTheme = localStorage.getItem('mode');
+        const prefersDark = systemThemeQuery ? systemThemeQuery.matches : false;
+        const theme = storedTheme || (prefersDark ? 'dark' : 'light');
+        applyTheme(theme, Boolean(storedTheme));
+        const storedSize = localStorage.getItem('size');
+        size = parseFloat(storedSize) || 1.5;
+        setSize(size, Boolean(storedSize));
+      }
 
-        const mode = localStorage.getItem('mode');
-        if (mode) changeMode(mode);
+      function changeFont(value, persist = true) {
+        if (!refs.quote) return;
+        refs.quote.className = `quote ${value}`;
+        if (persist) localStorage.setItem('font', value);
+      }
 
-        size = parseFloat(localStorage.getItem('size'), 2) || 1.5;
+      function applyTheme(theme, persist = true) {
+        const useDark = theme === 'dark';
+        refs.body.classList.toggle('theme-dark', useDark);
+        refs.body.classList.toggle('theme-light', !useDark);
+        if (persist) localStorage.setItem('mode', theme);
+      }
+
+      function changeSize(direction) {
+        size = direction === 'plus' ? size + 0.1 : size - 0.1;
+        size = Math.max(0.8, Math.min(2.4, parseFloat(size.toFixed(2))));
         setSize(size);
       }
 
-      /* A function that changes the font class and stores the new font value in local storage. */
-      function changeFont(value) {
-        quote.className = value;
-        localStorage.setItem('font', value);
+      function setSize(value, persist = true) {
+        if (!refs.quote) return;
+        refs.quote.style.fontSize = `${value}rem`;
+        if (persist) localStorage.setItem('size', value);
       }
 
-      /* A function to change the mode with the given value. */
-      function changeMode(value) {
-        body.className = value;
-        localStorage.setItem('mode', value);
-      }
-
-      /* A function to change the size based on the given value. */
-      function changeSize(value) {
-        size = value == "plus" ? size + 0.1 : size - 0.1;
-        size = parseFloat(size.toFixed(2))
-        setSize(size);
-      }
-
-      /* Sets the font size of the quote element and saves the value to the local storage. */
-      function setSize(value) {
-        quote.style.fontSize = value + 'rem';
-        localStorage.setItem('size', value);
-      }
-
-      /* Function to load a quote based on the URL parameters. */
       function loadQuote() {
-        var url = new URL(window.location);
-        var fileUrl = url.searchParams.get("f");
-        if (fileUrl == null) {
+        const url = new URL(window.location);
+        const fileUrl = url.searchParams.get("f");
+        if (!fileUrl) {
           updateQuote();
         } else {
           updateQuoteCustom(fileUrl);
         }
       }
 
-      /* A function to handle the color scheme change based on the media query list. */
-      function handleColorSchemeChange(mediaQueryList) {
+      function handleSystemTheme(event) {
         if (!localStorage.getItem('mode')) {
-          body.className = mediaQueryList.matches ? 'dark' : 'light';
+          applyTheme(event.matches ? 'dark' : 'light', false);
         }
       }
 
-      size_buttons.forEach(function (elem) {
-        elem.addEventListener("click", () => changeSize(elem.classList.value));
+      function setupPanelReveal() {
+        if (!refs.viewport || !refs.controlPanel) return;
+        let hideTimer = null;
+
+        const showPanel = (temporary = false) => {
+          refs.controlPanel.classList.add('panel-visible');
+          if (temporary) {
+            clearTimeout(hideTimer);
+            hideTimer = setTimeout(() => {
+              refs.controlPanel.classList.remove('panel-visible');
+            }, 4000);
+          }
+        };
+
+        const hidePanel = () => {
+          if (refs.viewport && refs.viewport.matches(':hover')) return;
+          if (refs.controlPanel.matches(':hover') || refs.controlPanel.matches(':focus-within')) return;
+          refs.controlPanel.classList.remove('panel-visible');
+        };
+
+        refs.viewport.addEventListener('pointerenter', (event) => {
+          if (event.pointerType === 'touch') return;
+          showPanel();
+        });
+
+        refs.viewport.addEventListener('pointerleave', (event) => {
+          if (event.pointerType === 'touch') return;
+          hidePanel();
+        });
+
+        refs.viewport.addEventListener('touchstart', () => {
+          showPanel(true);
+        }, { passive: true });
+
+        refs.controlPanel.addEventListener('mouseenter', showPanel);
+        refs.controlPanel.addEventListener('mouseleave', hidePanel);
+        refs.controlPanel.addEventListener('focusin', showPanel);
+        refs.controlPanel.addEventListener('focusout', () => {
+          setTimeout(() => {
+            if (!refs.controlPanel.matches(':focus-within')) hidePanel();
+          }, 0);
+        });
+      }
+
+      window.addEventListener('storage', (event) => {
+        if (event.key === 'mode') {
+          const storedTheme = event.newValue || (systemThemeQuery && systemThemeQuery.matches ? 'dark' : 'light');
+          applyTheme(storedTheme, false);
+        }
+        if (event.key === 'font' && event.newValue) {
+          changeFont(event.newValue);
+        }
+        if (event.key === 'size' && event.newValue) {
+          size = parseFloat(event.newValue) || size;
+          setSize(size);
+        }
       });
 
-      fonts_buttons.forEach(function (elem) {
-        elem.addEventListener("click", () => changeFont(elem.classList.value));
+      refs.sizeButtons.forEach((button) => {
+        button.addEventListener('click', () => changeSize(button.classList.contains('plus') ? 'plus' : 'minus'));
       });
 
-      modes_buttons.forEach(function (elem) {
-        elem.addEventListener("click", () => changeMode(elem.classList.value));
+      refs.fontButtons.forEach((button) => {
+        button.addEventListener('click', () => changeFont(Array.from(button.classList).find(cls => ['sans', 'serif', 'mono'].includes(cls))));
       });
 
-      shuffle.addEventListener("click", () => loadQuote());
-      prefersDark.addEventListener('change', handleColorSchemeChange);
+      refs.modeButtons.forEach((button) => {
+        button.addEventListener('click', () => applyTheme(button.classList.contains('dark') ? 'dark' : 'light'));
+      });
 
+      if (refs.shuffle) refs.shuffle.addEventListener('click', loadQuote);
+      if (refs.clearButton) {
+        refs.clearButton.addEventListener('click', clearModePreference);
+      }
+      if (systemThemeQuery) {
+        if (systemThemeQuery.addEventListener) {
+          systemThemeQuery.addEventListener('change', handleSystemTheme);
+        } else if (systemThemeQuery.addListener) {
+          systemThemeQuery.addListener(handleSystemTheme);
+        }
+      }
+
+      function clearModePreference() {
+        localStorage.removeItem('mode');
+        updateStyle();
+      }
+
+      setupPanelReveal();
       updateStyle();
       loadQuote();
-      handleColorSchemeChange(prefersDark);
-
     });
   </script>
 </body>
