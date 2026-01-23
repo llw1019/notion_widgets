@@ -248,6 +248,28 @@
             color: var(--text-strong);
         }
 
+        .settings-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 4px;
+            margin-top: 4px;
+        }
+        
+        .settings-row label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .settings-row input[type="checkbox"] {
+            width: 1rem;
+            height: 1rem;
+            accent-color: var(--accent);
+            cursor: pointer;
+        }
+
         .api-form small {
             color: var(--text-muted);
             font-size: 0.8rem;
@@ -320,6 +342,11 @@
                 <button id="speak-button" class="secondary">播放語音</button>
             </div>
 
+            <div class="settings-row">
+                <input type="checkbox" id="init-random-checkbox" checked>
+                <label for="init-random-checkbox">開啟時自動抽單字</label>
+            </div>
+
             <div id="api-key-form" class="api-form">
                 <label for="api-key-input">Gemini API Key</label>
                 <input type="text" id="api-key-input" placeholder="輸入您的 Gemini API Key">
@@ -332,6 +359,7 @@
 
     <script>
         const GEMINI_STORAGE_KEY = 'Gemini_apiKey';
+        const INIT_RANDOM_KEY = 'init_random_enabled';
         const DEFAULT_WORDS = ['apple', 'run', 'beautiful'];
         const POS_CANONICAL_MAP = {
             adjective: 'adj', adj: 'adj', 'adj.': 'adj', '形容詞': 'adj', '形容词': 'adj',
@@ -442,7 +470,11 @@
         async function checkAndSetApiKey() {
             const apiKey = getApiKey({ silent: true });
             toggleApiKeyForm(!apiKey);
-            await fetchAndUpdateVocabulary(state.currentWord || null);
+
+            const shouldInitRandom = localStorage.getItem(INIT_RANDOM_KEY) !== 'false';
+            if (shouldInitRandom || state.currentWord) {
+                await fetchAndUpdateVocabulary(state.currentWord || null);
+            }
         }
 
         function bindEvents() {
@@ -452,6 +484,15 @@
             const copyBtn = document.getElementById('copy-button');
             const speakBtn = document.getElementById('speak-button');
             const apiKeyBtn = document.getElementById('api-key-button');
+
+            // Settings
+            const initRandomCheckbox = document.getElementById('init-random-checkbox');
+            if (initRandomCheckbox) {
+                initRandomCheckbox.checked = localStorage.getItem(INIT_RANDOM_KEY) !== 'false';
+                initRandomCheckbox.addEventListener('change', (e) => {
+                    localStorage.setItem(INIT_RANDOM_KEY, e.target.checked);
+                });
+            }
 
             input.addEventListener('keyup', (event) => {
                 if (event.key === 'Enter') {
